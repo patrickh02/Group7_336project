@@ -113,6 +113,11 @@ INSERT INTO Employee (name, email, type, password)
 VALUES ('Admin User', 'admin@airline.com', 'admin', 'admin123'),
        ('Jane Smith', 'rep1@airline.com',  'rep',   'rep123');
 
+INSERT INTO Customer (name, address, email, phone, password) VALUES
+('John Doe',  '123 Main St, New York, NY',    'john@example.com', '555-1234', 'customer123'),
+('Jane Roe',  '456 Oak Ave, Los Angeles, CA', 'jane@example.com', '555-5678', 'customer456'),
+('Bob Smith', '789 Pine Rd, Chicago, IL',     'bob@example.com',  '555-9012', 'customer789');
+
 INSERT INTO Airline VALUES ('AA', 'American Airlines'),
                            ('UA', 'United Airlines'),
                            ('DL', 'Delta Air Lines');
@@ -144,3 +149,8 @@ VALUES
 ('300', 'DL', 4, 'JFK', 'LHR', '22:00:00', '10:00:00', 'international', 'MON,WED,FRI',                  599, 1499,  2999),
 ('102', 'AA', 1, 'JFK', 'MIA', '07:00:00', '10:30:00', 'domestic',      'MON,TUE,WED,THU,FRI,SAT,SUN',  149,  399,   799),
 ('301', 'DL', 4, 'LAX', 'JFK', '06:00:00', '14:30:00', 'domestic',      'TUE,THU,SAT',                  279,  679,  1279);
+
+INSERT INTO Question (customer_id, subject, question_text, asked_datetime) VALUES
+(1, 'Baggage policy',   'What is the baggage allowance for domestic flights?',        NOW()),
+(2, 'Seat upgrade',     'How can I upgrade my seat to business class after booking?', NOW()),
+(3, 'Cancellation fee', 'Is there a fee if I cancel my ticket 48 hours before?',     NOW());

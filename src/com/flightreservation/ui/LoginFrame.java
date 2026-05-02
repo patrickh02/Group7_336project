@@ -60,11 +60,7 @@ public class LoginFrame extends JFrame {
                     if ("rep".equalsIgnoreCase(emp.getType())) {
                         new CustomerRepDashboard(emp).setVisible(true);
                     } else {
-                        // Admin placeholder — Person 1 will add admin UI here
-                        JOptionPane.showMessageDialog(null,
-                            "Welcome, " + emp.getName() + " (Admin).\nAdmin UI is handled by Person 1.",
-                            "Admin Login", JOptionPane.INFORMATION_MESSAGE);
-                        new LoginFrame().setVisible(true);
+                        new AdminDashboard(emp).setVisible(true);
                     }
                     return;
                 }

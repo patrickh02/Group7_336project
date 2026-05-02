@@ -115,7 +115,38 @@ java -cp "out;lib\*" com.flightreservation.Main
 
 ---
 
-## 7. Customer Representative — Demo Steps
+## 7. Admin — Demo Steps
+
+After logging in as `admin@airline.com / admin123`, the Admin Dashboard opens with the following tabs:
+
+### Manage Users
+Two sub-tabs: **Customers** and **Employees**.
+- Click **Refresh** to load all records.
+- Click **Add Customer** / **Add Employee** to create a new account.
+- Select a row and click **Edit Selected** to update name, email, phone, address, or role.
+- Select a row and click **Delete Selected** to remove the account.
+
+### Sales Report
+- Choose a **Month** and **Year** from the dropdowns.
+- Click **Run Report** to see all tickets purchased that month with fare, booking fee, and status.
+- A summary line shows total ticket count and total revenue.
+
+### Reservations
+- Choose **By Flight Number** or **By Customer Name**.
+- Type a search term and click **Search**.
+- Results show ticket details, departure date, class, seat, fare, and status.
+
+### Revenue Reports
+Five sub-tabs, each with a **Refresh** button:
+- **By Flight** — revenue and ticket count per flight, sorted highest first.
+- **By Airline** — revenue and ticket count per airline.
+- **By Customer** — total spent per customer, sorted highest first.
+- **Top Customer** — displays the single highest-spending customer.
+- **Most Active Flights** — flights ranked by tickets sold.
+
+---
+
+## 8. Customer Representative — Demo Steps
 
 After logging in as `rep1@airline.com / rep123`, the Customer Rep Dashboard opens with the following tabs:
 
@@ -165,7 +196,7 @@ After logging in as `rep1@airline.com / rep123`, the Customer Rep Dashboard open
 
 ---
 
-## 8. Package as project.jar
+## 9. Package as project.jar
 
 ```bash
 # From project root, after compiling to out/
@@ -186,7 +217,7 @@ java -cp "project.jar;lib\*" com.flightreservation.Main
 
 ---
 
-## 9. Project Structure
+## 10. Project Structure
 
 ```
 Group7_336project/
@@ -202,9 +233,15 @@ Group7_336project/
 │   │                                Customer, Employee, Ticket, TicketFlight,
 │   │                                Waitlist, Question
 │   ├── service/
+│   │   ├── AdminService.java       ← all DB queries for admin features
 │   │   └── CustomerRepService.java ← all DB queries for customer rep features
 │   └── ui/
 │       ├── LoginFrame.java
+│       ├── AdminDashboard.java
+│       ├── ManageUsersPanel.java
+│       ├── SalesReportPanel.java
+│       ├── ReservationsReportPanel.java
+│       ├── RevenueReportPanel.java
 │       ├── CustomerRepDashboard.java
 │       ├── ManageFlightsPanel.java
 │       ├── ManageAircraftsPanel.java
@@ -219,9 +256,8 @@ Group7_336project/
 
 ---
 
-## 10. Known Limitations
+## 11. Known Limitations
 
 - Passwords are stored as plain text in the database (acceptable for a class project demo).
-- Customer UI (flight search, booking, cancellation) is handled by **Person 2** — placeholders are shown on login.
-- Admin UI (reports, user management) is handled by **Person 1** — a placeholder message is shown on admin login.
+- Customer UI (flight search, booking, cancellation) is handled by **Person 2** — a placeholder is shown on customer login.
 - The JAR does not bundle the MySQL Connector/J due to licensing; it must always be on the classpath.

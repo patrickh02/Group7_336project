@@ -101,27 +101,43 @@ public class ReservationsPanel extends JPanel {
         }
         Object[] r = upcomingData.get(row);
         int    ticketNum = (Integer) r[0];
-        String cls       = (String)  r[9];  // class
+        String cls       = (String)  r[9];
+        int    flightId  = (Integer) r[15];
+        java.sql.Date depDate = (java.sql.Date) r[8];
 
+        String confirmMsg;
         if ("economy".equalsIgnoreCase(cls)) {
-            JOptionPane.showMessageDialog(this,
-                "Economy tickets cannot be cancelled without a fee.\n" +
-                "Please contact customer support for assistance.",
-                "Cancellation Not Allowed", JOptionPane.WARNING_MESSAGE);
-            return;
+            confirmMsg = "Economy tickets require a $50 cancellation fee.\n" +
+                         "Cancel Ticket #" + ticketNum + " for a $50 fee?";
+        } else {
+            confirmMsg = "Cancel Ticket #" + ticketNum + " (" + cls + " class) with no fee?\n" +
+                         "This action cannot be undone.";
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-            "Cancel Ticket #" + ticketNum + " (" + cls + " class)?\n" +
-            "This action cannot be undone.",
+        int confirm = JOptionPane.showConfirmDialog(this, confirmMsg,
             "Confirm Cancellation", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 service.cancelTicket(ticketNum);
-                JOptionPane.showMessageDialog(this,
-                    "Ticket #" + ticketNum + " has been cancelled.",
-                    "Cancelled", JOptionPane.INFORMATION_MESSAGE);
+                String cancelMsg = "Ticket #" + ticketNum + " has been cancelled.";
+                if ("economy".equalsIgnoreCase(cls)) {
+                    cancelMsg += "\nA $50 cancellation fee has been applied.";
+                }
+
+                // Notify first waitlisted customer if a seat opened up
+                Object[] waitlisted = service.getFirstWaitlisted(flightId, depDate);
+                if (waitlisted != null) {
+                    String custName  = (String) waitlisted[1];
+                    String custEmail = (String) waitlisted[2];
+                    int    custId    = (Integer) waitlisted[0];
+                    service.removeFromWaitlist(custId, flightId, depDate);
+                    cancelMsg += "\n\nWaitlist Alert: " + custName + " (" + custEmail + ")\n" +
+                                 "has been notified that a seat is now available.";
+                }
+
+                JOptionPane.showMessageDialog(this, cancelMsg, "Cancelled",
+                    JOptionPane.INFORMATION_MESSAGE);
                 loadUpcoming();
                 loadPast();
             } catch (SQLException ex) {

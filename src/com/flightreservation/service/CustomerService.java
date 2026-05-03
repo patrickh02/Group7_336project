@@ -279,10 +279,6 @@ public class CustomerService {
         return list;
     }
 
-    /**
-     * Cancels a ticket by setting status = 'cancelled'.
-     * Only allowed for business/first class (caller must enforce).
-     */
     public void cancelTicket(int ticketNum) throws SQLException {
         String sql = "UPDATE Ticket SET status = 'cancelled' WHERE ticket_num = ?";
         try (Connection c = DBConnection.getConnection();
@@ -292,11 +288,135 @@ public class CustomerService {
         }
     }
 
+    // ── Round-Trip Booking ───────────────────────────────────────────────────
+
+    public int bookRoundTrip(int customerId,
+                             int outFlightId, java.sql.Date outDate,
+                             int retFlightId, java.sql.Date retDate,
+                             String cls, String seat, String meal,
+                             boolean flexible, double outFare, double retFare)
+            throws SQLException {
+        final double total = outFare + retFare + 25.00;
+        try (Connection c = DBConnection.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                int ticketNum;
+                String ins1 =
+                    "INSERT INTO Ticket (customer_id, total_fare, booking_fee, type, flexible, status) " +
+                    "VALUES (?, ?, 25.00, 'roundTrip', ?, 'active')";
+                try (PreparedStatement ps = c.prepareStatement(ins1, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, customerId);
+                    ps.setDouble(2, total);
+                    ps.setBoolean(3, flexible);
+                    ps.executeUpdate();
+                    try (ResultSet k = ps.getGeneratedKeys()) {
+                        k.next();
+                        ticketNum = k.getInt(1);
+                    }
+                }
+                String ins2 =
+                    "INSERT INTO TicketFlight (ticket_num, flight_id, sequence_order, dep_date, seat_num, meal_pref, class) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement ps = c.prepareStatement(ins2)) {
+                    ps.setInt(1, ticketNum);
+                    ps.setInt(2, outFlightId);
+                    ps.setInt(3, 1);
+                    ps.setDate(4, outDate);
+                    ps.setString(5, (seat == null || seat.isEmpty()) ? null : seat);
+                    ps.setString(6, (meal == null || meal.isEmpty()) ? "standard" : meal);
+                    ps.setString(7, cls);
+                    ps.executeUpdate();
+
+                    ps.setInt(1, ticketNum);
+                    ps.setInt(2, retFlightId);
+                    ps.setInt(3, 2);
+                    ps.setDate(4, retDate);
+                    ps.setString(5, null);
+                    ps.setString(6, "standard");
+                    ps.setString(7, cls);
+                    ps.executeUpdate();
+                }
+                c.commit();
+                return ticketNum;
+            } catch (SQLException ex) {
+                c.rollback();
+                throw ex;
+            }
+        }
+    }
+
+    // ── Waitlist Notification Helpers ────────────────────────────────────────
+
+    public Object[] getTicketFlightInfo(int ticketNum) throws SQLException {
+        String sql =
+            "SELECT tf.flight_id, tf.dep_date FROM TicketFlight tf " +
+            "WHERE tf.ticket_num = ? AND tf.sequence_order = 1";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, ticketNum);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return new Object[]{rs.getInt("flight_id"), rs.getDate("dep_date")};
+            }
+        }
+        return null;
+    }
+
+    public Object[] getFirstWaitlisted(int flightId, java.sql.Date depDate) throws SQLException {
+        String sql =
+            "SELECT w.customer_id, c.name, c.email, w.class " +
+            "FROM Waitlist w JOIN Customer c ON w.customer_id = c.customer_id " +
+            "WHERE w.flight_id = ? AND w.dep_date = ? ORDER BY w.position LIMIT 1";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, flightId);
+            ps.setDate(2, depDate);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return new Object[]{
+                        rs.getInt("customer_id"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("class")
+                    };
+            }
+        }
+        return null;
+    }
+
+    public void removeFromWaitlist(int customerId, int flightId, java.sql.Date depDate)
+            throws SQLException {
+        try (Connection c = DBConnection.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                int pos = 0;
+                try (PreparedStatement ps = c.prepareStatement(
+                        "SELECT position FROM Waitlist WHERE customer_id=? AND flight_id=? AND dep_date=?")) {
+                    ps.setInt(1, customerId); ps.setInt(2, flightId); ps.setDate(3, depDate);
+                    try (ResultSet rs = ps.executeQuery()) { if (rs.next()) pos = rs.getInt(1); }
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "DELETE FROM Waitlist WHERE customer_id=? AND flight_id=? AND dep_date=?")) {
+                    ps.setInt(1, customerId); ps.setInt(2, flightId); ps.setDate(3, depDate);
+                    ps.executeUpdate();
+                }
+                if (pos > 0) {
+                    try (PreparedStatement ps = c.prepareStatement(
+                            "UPDATE Waitlist SET position = position - 1 WHERE flight_id=? AND dep_date=? AND position > ?")) {
+                        ps.setInt(1, flightId); ps.setDate(2, depDate); ps.setInt(3, pos);
+                        ps.executeUpdate();
+                    }
+                }
+                c.commit();
+            } catch (SQLException ex) {
+                c.rollback();
+                throw ex;
+            }
+        }
+    }
+
     // ── Ask a Question ───────────────────────────────────────────────────────
 
-    /**
-     * Submits a customer question.
-     */
     public void submitQuestion(int customerId, String subject, String questionText)
             throws SQLException {
         String sql =
@@ -311,10 +431,6 @@ public class CustomerService {
         }
     }
 
-    /**
-     * Returns questions and answers for this customer.
-     * Rows: questionId, subject, questionText, answerText, askedDatetime, answeredDatetime
-     */
     public List<Object[]> getMyQuestions(int customerId) throws SQLException {
         List<Object[]> list = new ArrayList<>();
         String sql =
@@ -324,6 +440,35 @@ public class CustomerService {
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                        rs.getInt("question_id"),
+                        rs.getString("subject"),
+                        rs.getString("question_text"),
+                        rs.getString("answer_text"),
+                        rs.getTimestamp("asked_datetime"),
+                        rs.getTimestamp("answered_datetime")
+                    });
+                }
+            }
+        }
+        return list;
+    }
+
+    // rows: questionId, subject, questionText, answerText, askedDatetime, answeredDatetime
+    public List<Object[]> getAnsweredQuestions(String keyword) throws SQLException {
+        List<Object[]> list = new ArrayList<>();
+        String kw = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+        String sql =
+            "SELECT question_id, subject, question_text, answer_text, " +
+            "asked_datetime, answered_datetime " +
+            "FROM Question WHERE answer_text IS NOT NULL " +
+            "AND (subject LIKE ? OR question_text LIKE ? OR answer_text LIKE ?) " +
+            "ORDER BY answered_datetime DESC";
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, kw); ps.setString(2, kw); ps.setString(3, kw);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new Object[]{

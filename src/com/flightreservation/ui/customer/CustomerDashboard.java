@@ -25,9 +25,10 @@ public class CustomerDashboard extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
 
         FlightSearchPanel searchPanel = new FlightSearchPanel(service, customer);
-        tabs.addTab("🔍  Search Flights",     searchPanel);
-        tabs.addTab("📋  My Reservations",    new ReservationsPanel(service, customer));
-        tabs.addTab("❓  Ask a Question",     new AskQuestionPanel(service, customer));
+        tabs.addTab("Search Flights",     searchPanel);
+        tabs.addTab("My Reservations",    new ReservationsPanel(service, customer));
+        tabs.addTab("Ask a Question",     new AskQuestionPanel(service, customer));
+        tabs.addTab("Browse Q&A",         new BrowseQAPanel(service));
 
         // ── Status bar ────────────────────────────────────────────────────
         JLabel statusBar = new JLabel(
@@ -47,7 +48,7 @@ public class CustomerDashboard extends JFrame {
 
         // ── Welcome banner ────────────────────────────────────────────────
         JLabel welcome = new JLabel(
-            "  Welcome back, " + customer.getName() + "!   Search flights, view reservations, or ask a question.",
+            "  Welcome back, " + customer.getName() + "!   Search flights, view reservations, ask a question, or browse Q&A.",
             SwingConstants.LEFT);
         welcome.setFont(welcome.getFont().deriveFont(Font.ITALIC, 13f));
         welcome.setForeground(new Color(60, 100, 170));

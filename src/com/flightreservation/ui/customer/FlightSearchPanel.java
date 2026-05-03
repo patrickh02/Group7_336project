@@ -24,6 +24,8 @@ public class FlightSearchPanel extends JPanel {
     private JTextField    depField;
     private JTextField    arrField;
     private JTextField    dateField;
+    private JLabel        returnDateLabel;
+    private JTextField    returnDateField;
     private JComboBox<String> tripTypeBox;
     private JCheckBox     flexibleCheck;
 
@@ -79,6 +81,13 @@ public class FlightSearchPanel extends JPanel {
         tripTypeBox = new JComboBox<>(new String[]{"One-Way", "Round-Trip"});
         row1.add(tripTypeBox);
 
+        returnDateLabel = new JLabel("Return Date:");
+        returnDateLabel.setVisible(false);
+        row1.add(returnDateLabel);
+        returnDateField = new JTextField("2026-06-22", 11);
+        returnDateField.setVisible(false);
+        row1.add(returnDateField);
+
         flexibleCheck = new JCheckBox("Flexible ±3 days");
         row1.add(flexibleCheck);
 
@@ -117,6 +126,12 @@ public class FlightSearchPanel extends JPanel {
         applyBtn.addActionListener(e -> applyFiltersAndSort());
         sortBox.addActionListener(e -> applyFiltersAndSort());
         airlineFilterBox.addActionListener(e -> applyFiltersAndSort());
+        tripTypeBox.addActionListener(e -> {
+            boolean roundTrip = "Round-Trip".equals(tripTypeBox.getSelectedItem());
+            returnDateLabel.setVisible(roundTrip);
+            returnDateField.setVisible(roundTrip);
+            revalidate();
+        });
 
         return outer;
     }
@@ -287,15 +302,45 @@ public class FlightSearchPanel extends JPanel {
         }
         Object[] flight = rawResults.get(row);
 
-        Date depDate = parseDate(dateField.getText().trim());
-        if (depDate == null) {
-            JOptionPane.showMessageDialog(this, "Enter a valid departure date above first.");
-            return;
+        String tripType = (String) tripTypeBox.getSelectedItem();
+        boolean isRoundTrip = "Round-Trip".equals(tripType);
+
+        // For flexible searches, ask user to confirm which exact date they want
+        Date depDate;
+        if (flexibleCheck.isSelected()) {
+            String dateStr = JOptionPane.showInputDialog(this,
+                "You searched with flexible dates.\nEnter the exact departure date (YYYY-MM-DD):",
+                dateField.getText().trim());
+            if (dateStr == null) return;
+            depDate = parseDate(dateStr.trim());
+            if (depDate == null) {
+                JOptionPane.showMessageDialog(this, "Invalid date. Use YYYY-MM-DD.");
+                return;
+            }
+        } else {
+            depDate = parseDate(dateField.getText().trim());
+            if (depDate == null) {
+                JOptionPane.showMessageDialog(this, "Enter a valid departure date above first.");
+                return;
+            }
+        }
+
+        Date returnDate = null;
+        if (isRoundTrip) {
+            returnDate = parseDate(returnDateField.getText().trim());
+            if (returnDate == null) {
+                JOptionPane.showMessageDialog(this, "Enter a valid return date for round-trip.");
+                return;
+            }
+            if (!returnDate.after(depDate)) {
+                JOptionPane.showMessageDialog(this, "Return date must be after departure date.");
+                return;
+            }
         }
 
         BookingDialog dialog = new BookingDialog(
             (JFrame) SwingUtilities.getWindowAncestor(this),
-            service, customer, flight, depDate
+            service, customer, flight, depDate, tripType, returnDate
         );
         dialog.setVisible(true);
     }

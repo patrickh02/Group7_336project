@@ -2,6 +2,7 @@ package com.flightreservation.ui;
 
 import com.flightreservation.model.Employee;
 import com.flightreservation.service.AdminService;
+import com.flightreservation.service.CustomerRepService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,13 +15,15 @@ public class AdminDashboard extends JFrame {
         setSize(1000, 700);
         setLocationRelativeTo(null);
 
-        AdminService service = new AdminService();
+        AdminService       service    = new AdminService();
+        CustomerRepService repService = new CustomerRepService();
 
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Manage Users",       new ManageUsersPanel(service));
+        tabs.addTab("Manage Users",        new ManageUsersPanel(service));
         tabs.addTab("Sales Report",        new SalesReportPanel(service));
         tabs.addTab("Reservations",        new ReservationsReportPanel(service));
         tabs.addTab("Revenue Reports",     new RevenueReportPanel(service));
+        tabs.addTab("Flights by Airport",  new FlightsByAirportPanel(repService));
 
         JLabel statusBar = new JLabel("Logged in as: " + admin.getName() + " (" + admin.getEmail() + ")");
         statusBar.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));

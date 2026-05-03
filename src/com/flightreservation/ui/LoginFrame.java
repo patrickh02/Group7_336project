@@ -67,9 +67,8 @@ public class LoginFrame extends JFrame {
                 Customer cu = service.loginCustomer(email, pass);
                 if (cu != null) {
                     // Customer placeholder — Person 2 will add customer UI here
-                    JOptionPane.showMessageDialog(null,
-                        "Welcome, " + cu.getName() + " (Customer).\nCustomer UI is handled by Person 2.",
-                        "Customer Login", JOptionPane.INFORMATION_MESSAGE);
+                    dispose();
+                    new com.flightreservation.ui.customer.CustomerDashboard(cu).setVisible(true);
                     return;
                 }
                 JOptionPane.showMessageDialog(this,

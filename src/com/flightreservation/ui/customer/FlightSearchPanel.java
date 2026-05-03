@@ -1,0 +1,307 @@
+package com.flightreservation.ui.customer;
+
+import com.flightreservation.model.Customer;
+import com.flightreservation.service.CustomerService;
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.List;
+
+/**
+ * Lets a customer search for flights by route and date,
+ * then sort/filter results and proceed to booking.
+ */
+public class FlightSearchPanel extends JPanel {
+
+    private final CustomerService service;
+    private final Customer        customer;
+
+    // Search inputs
+    private JTextField    depField;
+    private JTextField    arrField;
+    private JTextField    dateField;
+    private JComboBox<String> tripTypeBox;
+    private JCheckBox     flexibleCheck;
+
+    // Sort / filter
+    private JComboBox<String> sortBox;
+    private JComboBox<String> airlineFilterBox;
+    private JTextField        maxPriceField;
+
+    // Results
+    private DefaultTableModel tableModel;
+    private JTable            table;
+    private JLabel            countLabel;
+
+    private List<Object[]> rawResults = new ArrayList<>();   // unfiltered rows
+    private List<String>   allAirlines = new ArrayList<>();  // for filter dropdown
+
+    private static final String[] COLS = {
+        "Flight ID", "Flight#", "Airline", "From", "To",
+        "Dep Time", "Arr Time", "Type", "Days", "Economy$", "Business$", "First$", "Seats Left"
+    };
+
+    public FlightSearchPanel(CustomerService service, Customer customer) {
+        this.service  = service;
+        this.customer = customer;
+        setLayout(new BorderLayout(8, 8));
+        setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
+
+        add(buildSearchForm(),  BorderLayout.NORTH);
+        add(buildResultsArea(), BorderLayout.CENTER);
+        add(buildBookButton(),  BorderLayout.SOUTH);
+    }
+
+    // ── Search form ───────────────────────────────────────────────────────────
+
+    private JPanel buildSearchForm() {
+        JPanel outer = new JPanel(new BorderLayout(0, 6));
+
+        // Row 1: route + date
+        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        row1.add(new JLabel("From Airport (e.g. JFK):"));
+        depField = new JTextField("JFK", 6);
+        row1.add(depField);
+
+        row1.add(new JLabel("To Airport (e.g. LAX):"));
+        arrField = new JTextField("LAX", 6);
+        row1.add(arrField);
+
+        row1.add(new JLabel("Date (YYYY-MM-DD):"));
+        dateField = new JTextField("2026-06-15", 11);
+        row1.add(dateField);
+
+        row1.add(new JLabel("Trip:"));
+        tripTypeBox = new JComboBox<>(new String[]{"One-Way", "Round-Trip"});
+        row1.add(tripTypeBox);
+
+        flexibleCheck = new JCheckBox("Flexible ±3 days");
+        row1.add(flexibleCheck);
+
+        JButton searchBtn = new JButton("Search");
+        searchBtn.setFont(searchBtn.getFont().deriveFont(Font.BOLD));
+        row1.add(searchBtn);
+
+        // Row 2: sort + filter
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        row2.add(new JLabel("Sort by:"));
+        sortBox = new JComboBox<>(new String[]{
+            "Departure Time", "Arrival Time", "Economy Price ↑", "Economy Price ↓"
+        });
+        row2.add(sortBox);
+
+        row2.add(new JLabel("Airline:"));
+        airlineFilterBox = new JComboBox<>(new String[]{"All"});
+        row2.add(airlineFilterBox);
+
+        row2.add(new JLabel("Max Price ($):"));
+        maxPriceField = new JTextField("", 6);
+        row2.add(maxPriceField);
+
+        JButton applyBtn = new JButton("Apply Filters");
+        row2.add(applyBtn);
+
+        countLabel = new JLabel("  0 flight(s) found");
+        row2.add(countLabel);
+
+        outer.add(row1, BorderLayout.NORTH);
+        outer.add(row2, BorderLayout.SOUTH);
+
+        // Wire up
+        searchBtn.addActionListener(e -> doSearch());
+        dateField.addActionListener(e -> doSearch());
+        applyBtn.addActionListener(e -> applyFiltersAndSort());
+        sortBox.addActionListener(e -> applyFiltersAndSort());
+        airlineFilterBox.addActionListener(e -> applyFiltersAndSort());
+
+        return outer;
+    }
+
+    // ── Results table ─────────────────────────────────────────────────────────
+
+    private JScrollPane buildResultsArea() {
+        tableModel = new DefaultTableModel(COLS, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        int[] widths = {70, 65, 130, 55, 55, 75, 75, 90, 160, 80, 80, 70, 80};
+        for (int i = 0; i < widths.length && i < table.getColumnCount(); i++)
+            table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+
+        // Colour rows where flight is full
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object val,
+                    boolean sel, boolean focus, int row, int col) {
+                Component comp = super.getTableCellRendererComponent(t, val, sel, focus, row, col);
+                int modelRow = t.convertRowIndexToModel(row);
+                if (!sel && modelRow < rawResults.size()) {
+                    Object[] r = rawResults.get(modelRow);
+                    int capacity = (Integer) r[15];
+                    int booked   = (Integer) r[16];
+                    if (booked >= capacity) {
+                        comp.setBackground(new Color(255, 230, 230));
+                    } else {
+                        comp.setBackground(Color.WHITE);
+                    }
+                }
+                return comp;
+            }
+        });
+
+        return new JScrollPane(table);
+    }
+
+    private JPanel buildBookButton() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
+        JButton bookBtn = new JButton("Book Selected Flight →");
+        bookBtn.setFont(bookBtn.getFont().deriveFont(Font.BOLD, 13f));
+        bookBtn.setBackground(new Color(50, 130, 220));
+        bookBtn.setForeground(Color.WHITE);
+        bookBtn.setOpaque(true);
+        p.add(bookBtn);
+        p.add(new JLabel("(Select a row above, then click Book)"));
+
+        bookBtn.addActionListener(e -> openBookingDialog());
+        return p;
+    }
+
+    // ── Search logic ──────────────────────────────────────────────────────────
+
+    private void doSearch() {
+        String dep = depField.getText().trim().toUpperCase();
+        String arr = arrField.getText().trim().toUpperCase();
+        if (dep.isEmpty() || arr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Enter departure and arrival airport codes.");
+            return;
+        }
+        Date date = parseDate(dateField.getText().trim());
+        if (date == null) {
+            JOptionPane.showMessageDialog(this, "Invalid date. Use YYYY-MM-DD.");
+            return;
+        }
+        boolean flexible = flexibleCheck.isSelected();
+
+        try {
+            rawResults = service.searchFlights(dep, arr, date, flexible);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "DB error: " + ex.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Rebuild airline filter dropdown
+        allAirlines.clear();
+        allAirlines.add("All");
+        for (Object[] r : rawResults) {
+            String airline = (String) r[3]; // airlineName
+            if (!allAirlines.contains(airline)) allAirlines.add(airline);
+        }
+        airlineFilterBox.removeAllItems();
+        for (String a : allAirlines) airlineFilterBox.addItem(a);
+
+        applyFiltersAndSort();
+
+        if (rawResults.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "No flights found for " + dep + " → " + arr + " on " + date +
+                (flexible ? " (±3 days)" : "") + ".\nCheck airport codes and try again.",
+                "No Results", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void applyFiltersAndSort() {
+        String selectedAirline = (String) airlineFilterBox.getSelectedItem();
+        double maxPrice = Double.MAX_VALUE;
+        String mp = maxPriceField.getText().trim();
+        if (!mp.isEmpty()) {
+            try { maxPrice = Double.parseDouble(mp); }
+            catch (NumberFormatException ignored) {}
+        }
+
+        List<Object[]> filtered = new ArrayList<>();
+        for (Object[] r : rawResults) {
+            String airlineName = (String) r[3];
+            double ecoPrice    = (Double)  r[12];
+            if (selectedAirline != null && !selectedAirline.equals("All")
+                    && !selectedAirline.equals(airlineName)) continue;
+            if (ecoPrice > maxPrice) continue;
+            filtered.add(r);
+        }
+
+        // Sort
+        String sortChoice = (String) sortBox.getSelectedItem();
+        if (sortChoice != null) {
+            if (sortChoice.startsWith("Departure")) {
+                filtered.sort(Comparator.comparing(r -> r[8].toString())); // depTime
+            } else if (sortChoice.startsWith("Arrival")) {
+                filtered.sort(Comparator.comparing(r -> r[9].toString())); // arrTime
+            } else if (sortChoice.contains("↑")) {
+                filtered.sort(Comparator.comparingDouble(r -> (Double) ((Object[]) r)[12]));
+            } else if (sortChoice.contains("↓")) {
+                filtered.sort((a, b) -> Double.compare((Double) b[12], (Double) a[12]));
+            }
+        }
+
+        // Rebuild table
+        tableModel.setRowCount(0);
+        // Keep rawResults in sync with displayed rows for row-picking
+        rawResults = filtered;
+
+        for (Object[] r : filtered) {
+            int capacity  = (Integer) r[15];
+            int booked    = (Integer) r[16];
+            int available = capacity - booked;
+            tableModel.addRow(new Object[]{
+                r[0],   // flightId
+                r[1],   // flightNum
+                r[3],   // airlineName
+                r[4],   // depAirportId
+                r[5],   // arrAirportId
+                r[8],   // depTime
+                r[9],   // arrTime
+                r[10],  // type
+                r[11],  // daysOfWeek
+                String.format("$%.0f", r[12]),
+                String.format("$%.0f", r[13]),
+                String.format("$%.0f", r[14]),
+                available <= 0 ? "FULL" : available + " seats"
+            });
+        }
+        countLabel.setText("  " + filtered.size() + " flight(s) found");
+    }
+
+    // ── Booking ───────────────────────────────────────────────────────────────
+
+    private void openBookingDialog() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Select a flight from the list first.");
+            return;
+        }
+        Object[] flight = rawResults.get(row);
+
+        Date depDate = parseDate(dateField.getText().trim());
+        if (depDate == null) {
+            JOptionPane.showMessageDialog(this, "Enter a valid departure date above first.");
+            return;
+        }
+
+        BookingDialog dialog = new BookingDialog(
+            (JFrame) SwingUtilities.getWindowAncestor(this),
+            service, customer, flight, depDate
+        );
+        dialog.setVisible(true);
+    }
+
+    private static Date parseDate(String s) {
+        try { return Date.valueOf(s); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+}

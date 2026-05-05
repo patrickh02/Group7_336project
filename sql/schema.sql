@@ -32,6 +32,7 @@ CREATE TABLE Flight (
     arr_time       TIME NOT NULL,
     type           VARCHAR(15) NOT NULL,
     days_of_week   VARCHAR(30) NOT NULL,
+    stops          INT NOT NULL DEFAULT 0,
     economy_price  DECIMAL(10,2) NOT NULL DEFAULT 200.00,
     business_price DECIMAL(10,2) NOT NULL DEFAULT 500.00,
     first_price    DECIMAL(10,2) NOT NULL DEFAULT 1000.00,
@@ -68,7 +69,7 @@ CREATE TABLE Ticket (
     type              VARCHAR(15) NOT NULL,
     flexible          BOOLEAN NOT NULL DEFAULT FALSE,
     status            VARCHAR(10) NOT NULL DEFAULT 'active',
-    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id)
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE
 );
 
 CREATE TABLE TicketFlight (
@@ -91,8 +92,8 @@ CREATE TABLE Waitlist (
     request_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dep_date     DATE NOT NULL,
     class        VARCHAR(10) NOT NULL,
-    PRIMARY KEY (customer_id, flight_id),
-    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
+    PRIMARY KEY (customer_id, flight_id, dep_date),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE,
     FOREIGN KEY (flight_id)   REFERENCES Flight(flight_id)
 );
 
@@ -105,8 +106,8 @@ CREATE TABLE Question (
     answer_text       TEXT,
     asked_datetime    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     answered_datetime DATETIME,
-    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
-    FOREIGN KEY (rep_id)      REFERENCES Employee(employee_id)
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (rep_id)      REFERENCES Employee(employee_id) ON DELETE SET NULL
 );
 
 INSERT INTO Employee (name, email, type, password)
@@ -139,16 +140,16 @@ INSERT INTO Aircraft (model, capacity, airline_id) VALUES
 ('Boeing 757',  228, 'DL');
 
 INSERT INTO Flight (flight_num, airline_id, aircraft_id, dep_airport_id, arr_airport_id,
-                    dep_time, arr_time, type, days_of_week,
+                    dep_time, arr_time, type, days_of_week, stops,
                     economy_price, business_price, first_price)
 VALUES
-('100', 'AA', 1, 'JFK', 'LAX', '08:00:00', '11:30:00', 'domestic',      'MON,WED,FRI,SUN',              299,  699,  1299),
-('101', 'AA', 2, 'LAX', 'JFK', '13:00:00', '21:30:00', 'domestic',      'MON,WED,FRI,SUN',              299,  699,  1299),
-('200', 'UA', 3, 'EWR', 'ORD', '09:30:00', '11:15:00', 'domestic',      'MON,TUE,WED,THU,FRI',          199,  499,   899),
-('201', 'UA', 3, 'ORD', 'LAX', '12:00:00', '14:30:00', 'domestic',      'MON,TUE,WED,THU,FRI',          249,  549,   999),
-('300', 'DL', 4, 'JFK', 'LHR', '22:00:00', '10:00:00', 'international', 'MON,WED,FRI',                  599, 1499,  2999),
-('102', 'AA', 1, 'JFK', 'MIA', '07:00:00', '10:30:00', 'domestic',      'MON,TUE,WED,THU,FRI,SAT,SUN',  149,  399,   799),
-('301', 'DL', 4, 'LAX', 'JFK', '06:00:00', '14:30:00', 'domestic',      'TUE,THU,SAT',                  279,  679,  1279);
+('100', 'AA', 1, 'JFK', 'LAX', '08:00:00', '11:30:00', 'domestic',      'MON,WED,FRI,SUN',              0, 299,  699,  1299),
+('101', 'AA', 2, 'LAX', 'JFK', '13:00:00', '21:30:00', 'domestic',      'MON,WED,FRI,SUN',              0, 299,  699,  1299),
+('200', 'UA', 3, 'EWR', 'ORD', '09:30:00', '11:15:00', 'domestic',      'MON,TUE,WED,THU,FRI',          0, 199,  499,   899),
+('201', 'UA', 3, 'ORD', 'LAX', '12:00:00', '14:30:00', 'domestic',      'MON,TUE,WED,THU,FRI',          0, 249,  549,   999),
+('300', 'DL', 4, 'JFK', 'LHR', '22:00:00', '10:00:00', 'international', 'MON,WED,FRI',                  0, 599, 1499,  2999),
+('102', 'AA', 1, 'JFK', 'MIA', '07:00:00', '10:30:00', 'domestic',      'MON,TUE,WED,THU,FRI,SAT,SUN',  0, 149,  399,   799),
+('301', 'DL', 4, 'LAX', 'JFK', '06:00:00', '14:30:00', 'domestic',      'TUE,THU,SAT',                  0, 279,  679,  1279);
 
 INSERT INTO Question (customer_id, subject, question_text, asked_datetime) VALUES
 (1, 'Baggage policy',   'What is the baggage allowance for domestic flights?',        NOW()),

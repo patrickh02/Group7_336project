@@ -14,6 +14,7 @@ public class Flight {
     private Time arrTime;
     private String type;
     private String daysOfWeek;
+    private int    stops;
     private double economyPrice;
     private double businessPrice;
     private double firstPrice;
@@ -106,6 +107,9 @@ public class Flight {
     public void setDaysOfWeek(String daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
     }
+
+    public int getStops() { return stops; }
+    public void setStops(int stops) { this.stops = stops; }
 
     public double getEconomyPrice() {
         return economyPrice;

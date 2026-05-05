@@ -184,7 +184,7 @@ public class CustomerRepService {
             "SELECT f.flight_id, f.flight_num, f.airline_id, al.name AS airline_name, " +
             "f.aircraft_id, f.dep_airport_id, f.arr_airport_id, " +
             "da.city AS dep_city, aa.city AS arr_city, " +
-            "f.dep_time, f.arr_time, f.type, f.days_of_week, " +
+            "f.dep_time, f.arr_time, f.type, f.days_of_week, f.stops, " +
             "f.economy_price, f.business_price, f.first_price " +
             "FROM Flight f " +
             "JOIN Airline  al ON f.airline_id     = al.airline_id " +
@@ -209,6 +209,7 @@ public class CustomerRepService {
                 f.setArrTime(rs.getTime("arr_time"));
                 f.setType(rs.getString("type"));
                 f.setDaysOfWeek(rs.getString("days_of_week"));
+                f.setStops(rs.getInt("stops"));
                 f.setEconomyPrice(rs.getDouble("economy_price"));
                 f.setBusinessPrice(rs.getDouble("business_price"));
                 f.setFirstPrice(rs.getDouble("first_price"));
@@ -221,8 +222,8 @@ public class CustomerRepService {
     public void addFlight(Flight f) throws SQLException {
         String sql =
             "INSERT INTO Flight (flight_num, airline_id, aircraft_id, dep_airport_id, arr_airport_id, " +
-            "dep_time, arr_time, type, days_of_week, economy_price, business_price, first_price) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "dep_time, arr_time, type, days_of_week, stops, economy_price, business_price, first_price) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, f.getFlightNum());
@@ -234,9 +235,10 @@ public class CustomerRepService {
             ps.setTime(7, f.getArrTime());
             ps.setString(8, f.getType());
             ps.setString(9, f.getDaysOfWeek());
-            ps.setDouble(10, f.getEconomyPrice());
-            ps.setDouble(11, f.getBusinessPrice());
-            ps.setDouble(12, f.getFirstPrice());
+            ps.setInt(10, f.getStops());
+            ps.setDouble(11, f.getEconomyPrice());
+            ps.setDouble(12, f.getBusinessPrice());
+            ps.setDouble(13, f.getFirstPrice());
             ps.executeUpdate();
         }
     }
@@ -244,7 +246,7 @@ public class CustomerRepService {
     public void updateFlight(Flight f) throws SQLException {
         String sql =
             "UPDATE Flight SET flight_num=?, airline_id=?, aircraft_id=?, dep_airport_id=?, " +
-            "arr_airport_id=?, dep_time=?, arr_time=?, type=?, days_of_week=?, " +
+            "arr_airport_id=?, dep_time=?, arr_time=?, type=?, days_of_week=?, stops=?, " +
             "economy_price=?, business_price=?, first_price=? WHERE flight_id=?";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -257,10 +259,11 @@ public class CustomerRepService {
             ps.setTime(7, f.getArrTime());
             ps.setString(8, f.getType());
             ps.setString(9, f.getDaysOfWeek());
-            ps.setDouble(10, f.getEconomyPrice());
-            ps.setDouble(11, f.getBusinessPrice());
-            ps.setDouble(12, f.getFirstPrice());
-            ps.setInt(13, f.getFlightId());
+            ps.setInt(10, f.getStops());
+            ps.setDouble(11, f.getEconomyPrice());
+            ps.setDouble(12, f.getBusinessPrice());
+            ps.setDouble(13, f.getFirstPrice());
+            ps.setInt(14, f.getFlightId());
             ps.executeUpdate();
         }
     }
@@ -427,9 +430,8 @@ public class CustomerRepService {
             }
         }
         String sql =
-            "INSERT INTO Waitlist (customer_id, flight_id, position, dep_date, class) " +
-            "VALUES (?, ?, ?, ?, ?) " +
-            "ON DUPLICATE KEY UPDATE position=VALUES(position)";
+            "INSERT IGNORE INTO Waitlist (customer_id, flight_id, position, dep_date, class) " +
+            "VALUES (?, ?, ?, ?, ?)";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, customerId);
@@ -490,39 +492,43 @@ public class CustomerRepService {
     public void updateTicketFlight(int ticketNum, int flightId, java.sql.Date depDate,
                                     String flightClass, String seatNum, String mealPref)
             throws SQLException {
-        String sql =
-            "UPDATE TicketFlight SET dep_date=?, class=?, seat_num=?, meal_pref=? " +
-            "WHERE ticket_num=? AND flight_id=?";
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, depDate);
-            ps.setString(2, flightClass);
-            ps.setString(3, (seatNum == null || seatNum.isEmpty()) ? null : seatNum);
-            ps.setString(4, (mealPref == null || mealPref.isEmpty()) ? "standard" : mealPref);
-            ps.setInt(5, ticketNum);
-            ps.setInt(6, flightId);
-            ps.executeUpdate();
-        }
-        // Recalculate and update total fare
         String priceSql = "business".equalsIgnoreCase(flightClass)
                 ? "SELECT business_price FROM Flight WHERE flight_id=?"
                 : "first".equalsIgnoreCase(flightClass)
                         ? "SELECT first_price FROM Flight WHERE flight_id=?"
                         : "SELECT economy_price FROM Flight WHERE flight_id=?";
-        double fare = 0;
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(priceSql)) {
-            ps.setInt(1, flightId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) fare = rs.getDouble(1);
+        try (Connection c = DBConnection.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                double fare = 0;
+                try (PreparedStatement ps = c.prepareStatement(priceSql)) {
+                    ps.setInt(1, flightId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) fare = rs.getDouble(1);
+                    }
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE TicketFlight SET dep_date=?, class=?, seat_num=?, meal_pref=? " +
+                        "WHERE ticket_num=? AND flight_id=?")) {
+                    ps.setDate(1, depDate);
+                    ps.setString(2, flightClass);
+                    ps.setString(3, (seatNum == null || seatNum.isEmpty()) ? null : seatNum);
+                    ps.setString(4, (mealPref == null || mealPref.isEmpty()) ? "standard" : mealPref);
+                    ps.setInt(5, ticketNum);
+                    ps.setInt(6, flightId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE Ticket SET total_fare=? WHERE ticket_num=?")) {
+                    ps.setDouble(1, fare + 25.00);
+                    ps.setInt(2, ticketNum);
+                    ps.executeUpdate();
+                }
+                c.commit();
+            } catch (SQLException ex) {
+                c.rollback();
+                throw ex;
             }
-        }
-        try (Connection c = DBConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(
-                     "UPDATE Ticket SET total_fare=? WHERE ticket_num=?")) {
-            ps.setDouble(1, fare + 25.00);
-            ps.setInt(2, ticketNum);
-            ps.executeUpdate();
         }
     }
 

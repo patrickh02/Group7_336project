@@ -194,8 +194,8 @@ public class FlightSearchPanel extends JPanel {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         JButton bookBtn = new JButton("Book Selected Flight →");
         bookBtn.setFont(bookBtn.getFont().deriveFont(Font.BOLD, 13f));
-        bookBtn.setBackground(new Color(50, 130, 220));
-        bookBtn.setForeground(Color.WHITE);
+        bookBtn.setBackground(Color.WHITE);
+        bookBtn.setForeground(Color.BLACK);
         bookBtn.setOpaque(true);
         p.add(bookBtn);
         p.add(new JLabel("(Select a row above, then click Book)"));

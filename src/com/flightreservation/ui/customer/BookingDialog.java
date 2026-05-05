@@ -151,8 +151,8 @@ public class BookingDialog extends JDialog {
 
         JButton confirmBtn = new JButton(isRoundTrip ? "Confirm Round-Trip Booking" : "Confirm Booking");
         confirmBtn.setFont(confirmBtn.getFont().deriveFont(Font.BOLD));
-        confirmBtn.setBackground(new Color(50, 160, 80));
-        confirmBtn.setForeground(Color.WHITE);
+        confirmBtn.setBackground(Color.WHITE);
+        confirmBtn.setForeground(new Color(50, 160, 80));
         confirmBtn.setOpaque(true);
 
         JButton cancelBtn = new JButton("Cancel");

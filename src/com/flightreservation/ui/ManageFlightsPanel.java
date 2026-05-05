@@ -139,8 +139,12 @@ public class ManageFlightsPanel extends JPanel {
         JTextField firstField     = new JTextField(isEdit ? String.format("%.2f", existing.getFirstPrice()) : "999.00", 8);
 
         if (isEdit) {
-            selectCombo(airlineBox,  airlines.indexOf(airlines.stream()
-                .filter(a -> a.getAirlineId().equals(existing.getAirlineId())).findFirst().orElse(null)));
+            for (int i = 0; i < airlines.size(); i++) {
+                if (airlines.get(i).getAirlineId().equals(existing.getAirlineId())) {
+                    airlineBox.setSelectedIndex(i);
+                    break;
+                }
+            }
             selectByIndex(aircraftBox, aircrafts, existing.getAircraftId());
             selectAirportCombo(depBox, airports, existing.getDepAirportId());
             selectAirportCombo(arrBox, airports, existing.getArrAirportId());
@@ -192,10 +196,6 @@ public class ManageFlightsPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Error saving: " + ex.getMessage(),
                 "DB Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void selectCombo(JComboBox<String> box, int idx) {
-        if (idx >= 0) box.setSelectedIndex(idx);
     }
 
     private void selectByIndex(JComboBox<String> box, List<Aircraft> list, int id) {

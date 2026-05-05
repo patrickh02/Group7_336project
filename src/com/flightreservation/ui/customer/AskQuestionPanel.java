@@ -117,23 +117,29 @@ public class AskQuestionPanel extends JPanel {
 
         refreshBtn.addActionListener(e -> loadHistory(table, answerArea));
 
+        loadHistory(table, answerArea);
+
         table.getSelectionModel().addListSelectionListener(ev -> {
             if (!ev.getValueIsAdjusting()) {
                 int sel = table.getSelectedRow();
-                if (sel < 0) { answerArea.setText(""); return; }
-                // Column 4 is "Answered" timestamp — use stored data from model
-                Object answerVal = tableModel.getValueAt(sel, 3); // Status
-                Object answeredAt = tableModel.getValueAt(sel, 4);
-                // We stored answer text in a hidden way; rebuild from loaded data
-                // Instead of storing answer in table, we store it via a parallel list
-                // (See loadHistory below — the 4th col is status, so we read from userObject trick)
-                // Simple approach: show from the raw table value which we hide as tooltip
-                String tip = table.getToolTipText();
-                if (tip != null && !tip.isEmpty()) answerArea.setText(tip);
+                if (sel < 0 || loadedQuestions == null || sel >= loadedQuestions.size()) {
+                    answerArea.setText("");
+                    return;
+                }
+                Object[] r = loadedQuestions.get(sel);
+                String qText = (String) r[2];
+                String aText = (String) r[3];
+                StringBuilder sb = new StringBuilder();
+                sb.append("Your question:\n").append(qText != null ? qText : "").append("\n\n");
+                if (aText != null && !aText.isEmpty()) {
+                    sb.append("Answer from support:\n").append(aText);
+                } else {
+                    sb.append("No answer yet. Please check back later.");
+                }
+                answerArea.setText(sb.toString());
+                answerArea.setCaretPosition(0);
             }
         });
-
-        loadHistory(table, answerArea);
     }
 
     private List<Object[]> loadedQuestions;
@@ -159,28 +165,5 @@ public class AskQuestionPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
                 "DB Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        // Re-wire selection listener to use loaded data
-        table.getSelectionModel().addListSelectionListener(ev -> {
-            if (!ev.getValueIsAdjusting()) {
-                int sel = table.getSelectedRow();
-                if (sel < 0 || loadedQuestions == null || sel >= loadedQuestions.size()) {
-                    answerArea.setText("");
-                    return;
-                }
-                Object[] r = loadedQuestions.get(sel);
-                String qText = (String) r[2];
-                String aText = (String) r[3];
-                StringBuilder sb = new StringBuilder();
-                sb.append("Your question:\n").append(qText != null ? qText : "").append("\n\n");
-                if (aText != null && !aText.isEmpty()) {
-                    sb.append("Answer from support:\n").append(aText);
-                } else {
-                    sb.append("No answer yet. Please check back later.");
-                }
-                answerArea.setText(sb.toString());
-                answerArea.setCaretPosition(0);
-            }
-        });
     }
 }

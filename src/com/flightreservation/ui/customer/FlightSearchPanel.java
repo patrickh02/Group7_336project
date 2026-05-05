@@ -33,6 +33,8 @@ public class FlightSearchPanel extends JPanel {
     private JComboBox<String> sortBox;
     private JComboBox<String> airlineFilterBox;
     private JTextField        maxPriceField;
+    private JTextField        depAfterField;
+    private JTextField        arrBeforeField;
 
     // Results
     private DefaultTableModel tableModel;
@@ -100,7 +102,8 @@ public class FlightSearchPanel extends JPanel {
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         row2.add(new JLabel("Sort by:"));
         sortBox = new JComboBox<>(new String[]{
-            "Departure Time", "Arrival Time", "Economy Price ↑", "Economy Price ↓"
+            "Departure Time", "Arrival Time", "Economy Price ↑", "Economy Price ↓",
+            "Duration ↑", "Duration ↓"
         });
         row2.add(sortBox);
 
@@ -111,6 +114,14 @@ public class FlightSearchPanel extends JPanel {
         row2.add(new JLabel("Max Price ($):"));
         maxPriceField = new JTextField("", 6);
         row2.add(maxPriceField);
+
+        row2.add(new JLabel("Depart After (HH:MM):"));
+        depAfterField = new JTextField("", 5);
+        row2.add(depAfterField);
+
+        row2.add(new JLabel("Arrive Before (HH:MM):"));
+        arrBeforeField = new JTextField("", 5);
+        row2.add(arrBeforeField);
 
         JButton applyBtn = new JButton("Apply Filters");
         row2.add(applyBtn);
@@ -241,6 +252,8 @@ public class FlightSearchPanel extends JPanel {
             try { maxPrice = Double.parseDouble(mp); }
             catch (NumberFormatException ignored) {}
         }
+        java.time.LocalTime depAfter  = parseTimeFilter(depAfterField.getText());
+        java.time.LocalTime arrBefore = parseTimeFilter(arrBeforeField.getText());
 
         List<Object[]> filtered = new ArrayList<>();
         for (Object[] r : originalResults) {
@@ -249,6 +262,14 @@ public class FlightSearchPanel extends JPanel {
             if (selectedAirline != null && !selectedAirline.equals("All")
                     && !selectedAirline.equals(airlineName)) continue;
             if (ecoPrice > maxPrice) continue;
+            if (depAfter != null) {
+                java.time.LocalTime dep = ((java.sql.Time) r[8]).toLocalTime();
+                if (dep.isBefore(depAfter)) continue;
+            }
+            if (arrBefore != null) {
+                java.time.LocalTime arr = ((java.sql.Time) r[9]).toLocalTime();
+                if (arr.isAfter(arrBefore)) continue;
+            }
             filtered.add(r);
         }
 
@@ -256,13 +277,17 @@ public class FlightSearchPanel extends JPanel {
         String sortChoice = (String) sortBox.getSelectedItem();
         if (sortChoice != null) {
             if (sortChoice.startsWith("Departure")) {
-                filtered.sort(Comparator.comparing(r -> r[8].toString())); // depTime
+                filtered.sort(Comparator.comparing(r -> r[8].toString()));
             } else if (sortChoice.startsWith("Arrival")) {
-                filtered.sort(Comparator.comparing(r -> r[9].toString())); // arrTime
-            } else if (sortChoice.contains("↑")) {
+                filtered.sort(Comparator.comparing(r -> r[9].toString()));
+            } else if (sortChoice.equals("Economy Price ↑")) {
                 filtered.sort(Comparator.comparingDouble(r -> (Double) ((Object[]) r)[12]));
-            } else if (sortChoice.contains("↓")) {
+            } else if (sortChoice.equals("Economy Price ↓")) {
                 filtered.sort((a, b) -> Double.compare((Double) b[12], (Double) a[12]));
+            } else if (sortChoice.equals("Duration ↑")) {
+                filtered.sort(Comparator.comparingLong(r -> durationMinutes((Object[]) r)));
+            } else if (sortChoice.equals("Duration ↓")) {
+                filtered.sort((a, b) -> Long.compare(durationMinutes(b), durationMinutes(a)));
             }
         }
 
@@ -349,5 +374,20 @@ public class FlightSearchPanel extends JPanel {
     private static Date parseDate(String s) {
         try { return Date.valueOf(s); }
         catch (IllegalArgumentException e) { return null; }
+    }
+
+    private long durationMinutes(Object[] r) {
+        java.time.LocalTime dep = ((java.sql.Time) r[8]).toLocalTime();
+        java.time.LocalTime arr = ((java.sql.Time) r[9]).toLocalTime();
+        long secs = dep.until(arr, java.time.temporal.ChronoUnit.SECONDS);
+        if (secs < 0) secs += 86400; // overnight flight
+        return secs / 60;
+    }
+
+    private java.time.LocalTime parseTimeFilter(String s) {
+        s = s == null ? "" : s.trim();
+        if (s.isEmpty()) return null;
+        try { return java.time.LocalTime.parse(s); }
+        catch (Exception e) { return null; }
     }
 }

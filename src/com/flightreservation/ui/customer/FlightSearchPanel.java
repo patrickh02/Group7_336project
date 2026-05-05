@@ -33,6 +33,7 @@ public class FlightSearchPanel extends JPanel {
     private JComboBox<String> sortBox;
     private JComboBox<String> airlineFilterBox;
     private JTextField        maxPriceField;
+    private JTextField        maxStopsField;
     private JTextField        depAfterField;
     private JTextField        arrBeforeField;
 
@@ -47,7 +48,7 @@ public class FlightSearchPanel extends JPanel {
 
     private static final String[] COLS = {
         "Flight ID", "Flight#", "Airline", "From", "To",
-        "Dep Time", "Arr Time", "Type", "Days", "Economy$", "Business$", "First$", "Seats Left"
+        "Dep Time", "Arr Time", "Type", "Days", "Stops", "Economy$", "Business$", "First$", "Seats Left"
     };
 
     public FlightSearchPanel(CustomerService service, Customer customer) {
@@ -115,6 +116,10 @@ public class FlightSearchPanel extends JPanel {
         maxPriceField = new JTextField("", 6);
         row2.add(maxPriceField);
 
+        row2.add(new JLabel("Max Stops:"));
+        maxStopsField = new JTextField("", 3);
+        row2.add(maxStopsField);
+
         row2.add(new JLabel("Depart After (HH:MM):"));
         depAfterField = new JTextField("", 5);
         row2.add(depAfterField);
@@ -157,7 +162,7 @@ public class FlightSearchPanel extends JPanel {
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        int[] widths = {70, 65, 130, 55, 55, 75, 75, 90, 160, 80, 80, 70, 80};
+        int[] widths = {70, 65, 130, 55, 55, 75, 75, 90, 160, 50, 80, 80, 70, 80};
         for (int i = 0; i < widths.length && i < table.getColumnCount(); i++)
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
@@ -252,6 +257,12 @@ public class FlightSearchPanel extends JPanel {
             try { maxPrice = Double.parseDouble(mp); }
             catch (NumberFormatException ignored) {}
         }
+        int maxStops = Integer.MAX_VALUE;
+        String ms = maxStopsField.getText().trim();
+        if (!ms.isEmpty()) {
+            try { maxStops = Integer.parseInt(ms); }
+            catch (NumberFormatException ignored) {}
+        }
         java.time.LocalTime depAfter  = parseTimeFilter(depAfterField.getText());
         java.time.LocalTime arrBefore = parseTimeFilter(arrBeforeField.getText());
 
@@ -259,9 +270,11 @@ public class FlightSearchPanel extends JPanel {
         for (Object[] r : originalResults) {
             String airlineName = (String) r[3];
             double ecoPrice    = (Double)  r[12];
+            int    stops       = (Integer) r[17];
             if (selectedAirline != null && !selectedAirline.equals("All")
                     && !selectedAirline.equals(airlineName)) continue;
             if (ecoPrice > maxPrice) continue;
+            if (stops > maxStops) continue;
             if (depAfter != null) {
                 java.time.LocalTime dep = ((java.sql.Time) r[8]).toLocalTime();
                 if (dep.isBefore(depAfter)) continue;
@@ -309,6 +322,7 @@ public class FlightSearchPanel extends JPanel {
                 r[9],   // arrTime
                 r[10],  // type
                 r[11],  // daysOfWeek
+                r[17],  // stops
                 String.format("$%.0f", r[12]),
                 String.format("$%.0f", r[13]),
                 String.format("$%.0f", r[14]),

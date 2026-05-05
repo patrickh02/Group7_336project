@@ -28,20 +28,15 @@ public class CustomerService {
 
         String dayOfWeek = getDayAbbrev(date);
 
-        String datePart = flexible
-            ? "? BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)"
-            : "? = ?";
-
-        // We check days_of_week contains the abbreviation for the target date(s).
-        // For simplicity: show all flights on that route and let user pick date.
-        // Filter by days_of_week containing the day abbreviation.
+        // For flexible searches, all flights on the route are returned (user confirms
+        // the exact date at booking time). For specific dates, filter by days_of_week.
         String sql =
             "SELECT f.flight_id, f.flight_num, f.airline_id, al.name AS airline_name, " +
             "f.dep_airport_id, f.arr_airport_id, " +
             "da.city AS dep_city, aa.city AS arr_city, " +
             "f.dep_time, f.arr_time, f.type, f.days_of_week, " +
             "f.economy_price, f.business_price, f.first_price, " +
-            "ac.capacity, " +
+            "ac.capacity, f.stops, " +
             "COALESCE((SELECT COUNT(*) FROM TicketFlight tf2 " +
             "          JOIN Ticket t2 ON tf2.ticket_num = t2.ticket_num " +
             "          WHERE tf2.flight_id = f.flight_id AND tf2.dep_date = ? AND t2.status = 'active'), 0) AS booked " +
@@ -67,23 +62,24 @@ public class CustomerService {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new Object[]{
-                        rs.getInt("flight_id"),
-                        rs.getString("flight_num"),
-                        rs.getString("airline_id"),
-                        rs.getString("airline_name"),
-                        rs.getString("dep_airport_id"),
-                        rs.getString("arr_airport_id"),
-                        rs.getString("dep_city"),
-                        rs.getString("arr_city"),
-                        rs.getTime("dep_time"),
-                        rs.getTime("arr_time"),
-                        rs.getString("type"),
-                        rs.getString("days_of_week"),
-                        rs.getDouble("economy_price"),
-                        rs.getDouble("business_price"),
-                        rs.getDouble("first_price"),
-                        rs.getInt("capacity"),
-                        rs.getInt("booked")
+                        rs.getInt("flight_id"),       // [0]
+                        rs.getString("flight_num"),    // [1]
+                        rs.getString("airline_id"),    // [2]
+                        rs.getString("airline_name"),  // [3]
+                        rs.getString("dep_airport_id"),// [4]
+                        rs.getString("arr_airport_id"),// [5]
+                        rs.getString("dep_city"),      // [6]
+                        rs.getString("arr_city"),      // [7]
+                        rs.getTime("dep_time"),        // [8]
+                        rs.getTime("arr_time"),        // [9]
+                        rs.getString("type"),          // [10]
+                        rs.getString("days_of_week"),  // [11]
+                        rs.getDouble("economy_price"), // [12]
+                        rs.getDouble("business_price"),// [13]
+                        rs.getDouble("first_price"),   // [14]
+                        rs.getInt("capacity"),         // [15]
+                        rs.getInt("booked"),           // [16]
+                        rs.getInt("stops")             // [17]
                     });
                 }
             }
@@ -201,9 +197,8 @@ public class CustomerService {
             }
         }
         String sql =
-            "INSERT INTO Waitlist (customer_id, flight_id, position, dep_date, class) " +
-            "VALUES (?, ?, ?, ?, ?) " +
-            "ON DUPLICATE KEY UPDATE position = VALUES(position)";
+            "INSERT IGNORE INTO Waitlist (customer_id, flight_id, position, dep_date, class) " +
+            "VALUES (?, ?, ?, ?, ?)";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, customerId);
@@ -220,7 +215,7 @@ public class CustomerService {
     /**
      * Returns upcoming reservations (dep_date >= today) for the customer.
      * Rows: ticketNum, flightNum, airlineId, airlineName, depAirportId, arrAirportId,
-     *       depDate, class, seatNum, totalFare, status, ticketType, flightId
+     *       depDate, class, seatNum, mealPref, totalFare, status, ticketType, flightId, purchaseDatetime
      */
     public List<Object[]> getUpcomingReservations(int customerId) throws SQLException {
         return getReservations(customerId, true);
@@ -235,13 +230,15 @@ public class CustomerService {
 
     private List<Object[]> getReservations(int customerId, boolean upcoming) throws SQLException {
         List<Object[]> list = new ArrayList<>();
-        String dateFilter = upcoming ? "tf.dep_date >= CURDATE()" : "tf.dep_date < CURDATE()";
+        String dateFilter = upcoming
+            ? "tf.dep_date >= CURDATE() AND t.status = 'active'"
+            : "tf.dep_date < CURDATE()";
         String sql =
             "SELECT t.ticket_num, f.flight_num, f.airline_id, al.name AS aname, " +
             "f.dep_airport_id, f.arr_airport_id, " +
             "da.city AS dep_city, aa.city AS arr_city, " +
             "tf.dep_date, tf.class, tf.seat_num, tf.meal_pref, " +
-            "t.total_fare, t.status, t.type AS ticket_type, f.flight_id " +
+            "t.total_fare, t.status, t.type AS ticket_type, f.flight_id, t.purchase_datetime " +
             "FROM Ticket t " +
             "JOIN TicketFlight tf ON t.ticket_num   = tf.ticket_num " +
             "JOIN Flight        f  ON tf.flight_id   = f.flight_id " +
@@ -271,7 +268,8 @@ public class CustomerService {
                         rs.getDouble("total_fare"),
                         rs.getString("status"),
                         rs.getString("ticket_type"),
-                        rs.getInt("flight_id")
+                        rs.getInt("flight_id"),
+                        rs.getTimestamp("purchase_datetime")
                     });
                 }
             }

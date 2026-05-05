@@ -39,7 +39,8 @@ public class FlightSearchPanel extends JPanel {
     private JTable            table;
     private JLabel            countLabel;
 
-    private List<Object[]> rawResults = new ArrayList<>();   // unfiltered rows
+    private List<Object[]> rawResults     = new ArrayList<>();  // current displayed rows
+    private List<Object[]> originalResults = new ArrayList<>(); // full unfiltered search results
     private List<String>   allAirlines = new ArrayList<>();  // for filter dropdown
 
     private static final String[] COLS = {
@@ -204,17 +205,18 @@ public class FlightSearchPanel extends JPanel {
         boolean flexible = flexibleCheck.isSelected();
 
         try {
-            rawResults = service.searchFlights(dep, arr, date, flexible);
+            originalResults = service.searchFlights(dep, arr, date, flexible);
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "DB error: " + ex.getMessage(),
                 "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        rawResults = new ArrayList<>(originalResults);
 
         // Rebuild airline filter dropdown
         allAirlines.clear();
         allAirlines.add("All");
-        for (Object[] r : rawResults) {
+        for (Object[] r : originalResults) {
             String airline = (String) r[3]; // airlineName
             if (!allAirlines.contains(airline)) allAirlines.add(airline);
         }
@@ -241,7 +243,7 @@ public class FlightSearchPanel extends JPanel {
         }
 
         List<Object[]> filtered = new ArrayList<>();
-        for (Object[] r : rawResults) {
+        for (Object[] r : originalResults) {
             String airlineName = (String) r[3];
             double ecoPrice    = (Double)  r[12];
             if (selectedAirline != null && !selectedAirline.equals("All")
@@ -264,9 +266,8 @@ public class FlightSearchPanel extends JPanel {
             }
         }
 
-        // Rebuild table
+        // Rebuild table; keep rawResults in sync with displayed rows for row-picking
         tableModel.setRowCount(0);
-        // Keep rawResults in sync with displayed rows for row-picking
         rawResults = filtered;
 
         for (Object[] r : filtered) {

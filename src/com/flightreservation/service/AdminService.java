@@ -152,7 +152,7 @@ public class AdminService {
         String sql =
             "SELECT t.ticket_num, cu.name AS cname, cu.email, " +
             "f.flight_num, al.name AS aname, " +
-            "tf.dep_airport_id, tf.arr_airport_id, tf.dep_date, tf.class, tf.seat_num, " +
+            "f.dep_airport_id, f.arr_airport_id, tf.dep_date, tf.class, tf.seat_num, " +
             "t.total_fare, t.status " +
             "FROM Ticket t " +
             "JOIN Customer     cu ON t.customer_id  = cu.customer_id " +
@@ -191,7 +191,7 @@ public class AdminService {
         String sql =
             "SELECT t.ticket_num, cu.name AS cname, cu.email, " +
             "f.flight_num, al.name AS aname, " +
-            "tf.dep_airport_id, tf.arr_airport_id, tf.dep_date, tf.class, tf.seat_num, " +
+            "f.dep_airport_id, f.arr_airport_id, tf.dep_date, tf.class, tf.seat_num, " +
             "t.total_fare, t.status " +
             "FROM Ticket t " +
             "JOIN Customer     cu ON t.customer_id  = cu.customer_id " +

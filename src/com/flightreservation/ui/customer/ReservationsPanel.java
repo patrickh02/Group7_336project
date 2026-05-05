@@ -66,7 +66,7 @@ public class ReservationsPanel extends JPanel {
         JButton refreshBtn = new JButton("Refresh");
         JButton cancelBtn  = new JButton("Cancel Selected Ticket");
         cancelBtn.setForeground(Color.RED);
-        JLabel note = new JLabel("  (Cancellation available for Business / First class only)");
+        JLabel note = new JLabel("  (Economy: $50 cancellation fee | Business/First: no fee)");
         note.setFont(note.getFont().deriveFont(Font.ITALIC, 11f));
         note.setForeground(Color.GRAY);
 

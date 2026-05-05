@@ -1,7 +1,6 @@
 # Flight Reservation System — Group 7
 
-A standalone Java Swing desktop application for an online travel reservation system.  
-Roles: Admin, Customer Representative, Customer.
+A standalone Java Swing desktop application for an online travel reservation system backed by MySQL. Supports three user roles: **Customer**, **Customer Representative**, and **Admin**.
 
 ---
 
@@ -11,253 +10,241 @@ Roles: Admin, Customer Representative, Customer.
 |------|---------|
 | Java (JDK) | 11 or later |
 | MySQL Server | 8.x |
-| MySQL Connector/J | 8.x (JAR file) |
+| MySQL Connector/J | included in `lib/` |
 
 ---
 
-## 1. MySQL Setup
+## Setup
 
-1. Start your MySQL server.
-2. Open a MySQL client (Workbench, DBeaver, or `mysql` CLI).
-3. Run the schema file:
+### 1. Start MySQL and run the schema
 
-```sql
-SOURCE /path/to/Group7_336project/sql/schema.sql;
-```
+Open MySQL Workbench, go to **File → Open SQL Script**, select `sql/schema.sql`, and click the ⚡ button to run it.
 
-Or via CLI:
-
+Or via terminal:
 ```bash
 mysql -u root -p < sql/schema.sql
 ```
 
-This creates the `flight_reservation` database, all tables, and loads sample data.
+This creates the `flight_reservation` database with all tables and sample data.
 
----
+### 2. Configure database credentials
 
-## 2. Configure Database Credentials
-
-Open:
-
-```
-src/com/flightreservation/db/DBConnection.java
-```
-
-Change these four lines to match your MySQL setup:
+Open `src/com/flightreservation/db/DBConnection.java` and update these lines to match your MySQL setup:
 
 ```java
-private static final String HOST = "localhost";         // MySQL host
-private static final String PORT = "3306";              // MySQL port
-private static final String DB   = "flight_reservation";// database name
-private static final String USER = "root";              // MySQL username
-private static final String PASS = "password";          // MySQL password
+private static final String DB   = "flight_reservation";
+private static final String USER = "root";
+private static final String PASS = "password";
 ```
 
----
-
-## 3. Add MySQL Connector/J
-
-Download `mysql-connector-j-<version>.jar` from https://dev.mysql.com/downloads/connector/j/
-
-Place it in a `lib/` folder at the project root:
-
-```
-Group7_336project/
-├── lib/
-│   └── mysql-connector-j-8.x.xx.jar
-├── src/
-└── sql/
-```
-
----
-
-## 4. Compile
-
-From the project root:
+### 3. Compile
 
 ```bash
 mkdir -p out
 javac -cp "lib/*" -d out $(find src -name "*.java")
 ```
 
-On Windows (PowerShell):
-
-```powershell
-mkdir out
-javac -cp "lib\*" -d out (Get-ChildItem -Recurse src -Filter "*.java" | % { $_.FullName })
-```
-
----
-
-## 5. Run
+### 4. Run
 
 ```bash
 java -cp "out:lib/*" com.flightreservation.Main
 ```
 
 On Windows:
-
 ```cmd
 java -cp "out;lib\*" com.flightreservation.Main
 ```
 
 ---
 
-## 6. Sample Login Credentials
+## Login Credentials
 
 | Role | Email | Password |
 |------|-------|----------|
-| Customer Rep | rep1@airline.com | rep123 |
 | Admin | admin@airline.com | admin123 |
-| Customer | john@example.com | customer123 |
+| Customer Rep | rep1@airline.com | rep123 |
 | Customer | jane@example.com | customer456 |
 | Customer | bob@example.com | customer789 |
 
 ---
 
-## 7. Admin — Demo Steps
+## Available Airports
 
-After logging in as `admin@airline.com / admin123`, the Admin Dashboard opens with the following tabs:
+| Code | Airport | City | Country |
+|------|---------|------|---------|
+| JFK | John F Kennedy Intl | New York | USA |
+| LGA | LaGuardia Airport | New York | USA |
+| EWR | Newark Liberty Intl | Newark | USA |
+| LAX | Los Angeles Intl | Los Angeles | USA |
+| ORD | O'Hare International | Chicago | USA |
+| MIA | Miami International | Miami | USA |
+| LHR | Heathrow Airport | London | UK |
+| CDG | Charles de Gaulle Airport | Paris | France |
+
+## Available Airlines
+
+| Code | Airline |
+|------|---------|
+| AA | American Airlines |
+| UA | United Airlines |
+| DL | Delta Air Lines |
+
+## Sample Flight Routes
+
+| Flight | Route | Days | Economy |
+|--------|-------|------|---------|
+| AA100 | JFK → LAX | Mon, Wed, Fri, Sun | $299 |
+| AA101 | LAX → JFK | Mon, Wed, Fri, Sun | $299 |
+| UA200 | EWR → ORD | Mon–Fri | $199 |
+| UA201 | ORD → LAX | Mon–Fri | $249 |
+| DL300 | JFK → LHR | Mon, Wed, Fri | $599 |
+| AA102 | JFK → MIA | Daily | $149 |
+| DL301 | LAX → JFK | Tue, Thu, Sat | $279 |
+
+---
+
+## Customer Guide
+
+Log in with `jane@example.com / customer456` or `bob@example.com / customer789`.
+
+### Search Flights
+- Go to the **Search Flights** tab
+- Enter a **From** airport code (e.g. `JFK`) and **To** airport code (e.g. `LAX`)
+- Enter a date in `YYYY-MM-DD` format (e.g. `2026-06-15`)
+- Click **Search** — matching flights appear in the table below
+
+### One-Way vs Round-Trip
+- Set the **Trip** dropdown to **One-Way** or **Round-Trip**
+- For Round-Trip, a **Return Date** field appears — fill it in
+- Click **Search**
+
+### Flexible Dates
+- Check the **Flexible ±3 days** checkbox before clicking Search
+- Results will include flights within 3 days of your chosen date
+
+### Sort Flights
+Use the **Sort by** dropdown to sort results by:
+- Departure Time
+- Arrival Time
+- Economy Price (low to high or high to low)
+- Duration (shortest or longest)
+
+### Filter Flights
+- **Airline** — filter by a specific airline
+- **Max Price ($)** — only show flights at or below this economy price
+- **Max Stops** — e.g. enter `0` for nonstop only
+- **Depart After (HH:MM)** — e.g. `09:00`
+- **Arrive Before (HH:MM)** — e.g. `18:00`
+- Click **Apply Filters** after setting any filter
+
+### Book a Flight
+1. Select a flight row in the table
+2. Click **Book Selected Flight**
+3. Choose your **Class** (economy / business / first)
+4. Optionally enter a **Seat** number (e.g. `12A`)
+5. Choose a **Meal** preference
+6. Click **Confirm Booking**
+
+If the flight is full, you will be offered the option to join the waitlist.
+
+### Cancel a Reservation
+- Go to **My Reservations → Upcoming Trips**
+- Select a ticket and click **Cancel Selected Ticket**
+- Economy class: a **$50 cancellation fee** applies
+- Business/First class: cancelled with **no fee**
+- When a seat opens up, the first customer on the waitlist is automatically notified
+
+### View Past & Upcoming Trips
+- Go to **My Reservations**
+- **Upcoming Trips** tab — active future bookings
+- **Past Trips** tab — completed or cancelled reservations
+- Details shown: flight, route, date, class, seat, meal, fare, status, purchase date
+
+### Ask a Question
+- Go to **Ask a Question** tab
+- Enter a subject and your question
+- Click **Submit** — a customer representative will answer it
+
+### Browse Q&A
+- Go to **Browse Q&A** tab
+- Click **Show All** to see all answered questions
+- Type a keyword (e.g. `baggage`) and click **Search** to filter results
+
+---
+
+## Admin Guide
+
+Log in with `admin@airline.com / admin123`.
 
 ### Manage Users
-Two sub-tabs: **Customers** and **Employees**.
-- Click **Refresh** to load all records.
-- Click **Add Customer** / **Add Employee** to create a new account.
-- Select a row and click **Edit Selected** to update name, email, phone, address, or role.
-- Select a row and click **Delete Selected** to remove the account.
+- **Customers** sub-tab — view, add, edit, or delete customer accounts
+- **Employees** sub-tab — view, add, edit, or delete rep/admin accounts
+- Select a row then click **Edit Selected** or **Delete Selected**
 
 ### Sales Report
-- Choose a **Month** and **Year** from the dropdowns.
-- Click **Run Report** to see all tickets purchased that month with fare, booking fee, and status.
-- A summary line shows total ticket count and total revenue.
+- Choose a **Month** and **Year**
+- Click **Run Report** to see all tickets for that period with fare, booking fee, and status
+- Summary line shows total tickets and total revenue
 
 ### Reservations
-- Choose **By Flight Number** or **By Customer Name**.
-- Type a search term and click **Search**.
-- Results show ticket details, departure date, class, seat, fare, and status.
+- Search **By Flight Number** (e.g. `100`) or **By Customer Name** (e.g. `Jane`)
+- Click **Search** to see matching reservations
 
 ### Revenue Reports
 Five sub-tabs, each with a **Refresh** button:
-- **By Flight** — revenue and ticket count per flight, sorted highest first.
-- **By Airline** — revenue and ticket count per airline.
-- **By Customer** — total spent per customer, sorted highest first.
-- **Top Customer** — displays the single highest-spending customer.
-- **Most Active Flights** — flights ranked by tickets sold.
-
----
-
-## 8. Customer Representative — Demo Steps
-
-After logging in as `rep1@airline.com / rep123`, the Customer Rep Dashboard opens with the following tabs:
-
-### Manage Flights
-- Click **Refresh** to see all flights.
-- Click **Add** to create a new flight (fill in flight number, airline, aircraft, airports, times, prices).
-- Select a row and click **Edit Selected** to modify it.
-- Select a row and click **Delete Selected** to remove it.
-
-### Manage Aircrafts
-- Click **Refresh** to see all aircraft.
-- Click **Add** to add a new aircraft (model, capacity, airline).
-- Select a row and click **Edit Selected** or **Delete Selected**.
-
-### Manage Airports
-- Click **Refresh** to see all airports.
-- Click **Add** to add a new airport (3-letter code, name, city, country).
-- Airport code (primary key) cannot be edited after creation.
-
-### Make Reservation
-- Load customers and flights with **Reload** buttons.
-- Choose a customer, flight, departure date (YYYY-MM-DD), class, seat (optional), and meal.
-- Click **Book Reservation**.
-- If the flight is full, you will be offered the option to add the customer to the waitlist.
-
-### Edit Reservation
-- Type a customer name, email, or ticket number in the search box and click **Search**.
-- Select a row in the results table.
-- Edit departure date, class, seat, or meal in the form below.
-- Click **Save Changes**.
-
-### Flight Waitlist
-- Click **Reload Flights** to populate the dropdown.
-- Select a flight and click **Show Waitlist**.
-- The table shows all customers on the waitlist for that flight.
+- **By Flight** — revenue and ticket count per flight
+- **By Airline** — revenue and ticket count per airline
+- **By Customer** — total spent per customer
+- **Top Customer** — the single highest-spending customer
+- **Most Active Flights** — flights ranked by tickets sold
 
 ### Flights by Airport
-- Click **Reload Airports** to populate the dropdown.
-- Select an airport and click **Show Flights**.
-- Two tables show departing and arriving flights for that airport.
+- Select an airport from the dropdown
+- Click **Show Flights** to see all departing and arriving flights for that airport
+
+---
+
+## Customer Representative Guide
+
+Log in with `rep1@airline.com / rep123`.
+
+### Make Reservation (on behalf of a customer)
+- Go to **Make Reservation** tab
+- Click **Reload** to load customers and flights
+- Select a customer, flight, date, class, seat, and meal
+- Click **Book Reservation**
+
+### Edit Reservation
+- Go to **Edit Reservation** tab
+- Search by customer name, email, or ticket number
+- Select a result row, update the fields, and click **Save Changes**
+
+### Manage Flights
+- View all flights, add new ones, or edit/delete existing flights
+- Fields include: flight number, airline, aircraft, airports, times, days, stops, prices
+
+### Manage Aircrafts
+- Add, edit, or delete aircraft records (model, capacity, airline)
+
+### Manage Airports
+- Add new airports using a 3-letter IATA code (e.g. `SFO`)
+- Existing airports can be viewed but the airport code cannot be changed after creation
+
+### Flight Waitlist
+- Select a flight from the dropdown and click **Show Waitlist**
+- See all customers waiting for a seat on that flight
+
+### Flights by Airport
+- Select an airport and click **Show Flights**
+- Separate tables show departing and arriving flights
 
 ### Answer Questions
-- The table loads all customer questions (unanswered first).
-- Select a question to see its text.
-- Type an answer in the text area and click **Save Answer**.
-- Already-answered questions can be updated.
+- All customer questions load automatically (unanswered shown first)
+- Select a question, type an answer, and click **Save Answer**
 
 ---
 
-## 9. Package as project.jar
+## Notes
 
-```bash
-# From project root, after compiling to out/
-jar cfe project.jar com.flightreservation.Main -C out . 
-```
-
-Run the JAR (Connector/J must still be on the classpath):
-
-```bash
-java -cp "project.jar:lib/*" com.flightreservation.Main
-```
-
-On Windows:
-
-```cmd
-java -cp "project.jar;lib\*" com.flightreservation.Main
-```
-
----
-
-## 10. Project Structure
-
-```
-Group7_336project/
-├── lib/                          ← place mysql-connector-j jar here
-├── out/                          ← compiled classes (created by javac)
-├── sql/
-│   └── schema.sql                ← database schema + seed data
-├── src/com/flightreservation/
-│   ├── Main.java                 ← entry point
-│   ├── db/
-│   │   └── DBConnection.java     ← JDBC connection (edit credentials here)
-│   ├── model/                    ← POJOs: Airline, Aircraft, Airport, Flight,
-│   │                                Customer, Employee, Ticket, TicketFlight,
-│   │                                Waitlist, Question
-│   ├── service/
-│   │   ├── AdminService.java       ← all DB queries for admin features
-│   │   └── CustomerRepService.java ← all DB queries for customer rep features
-│   └── ui/
-│       ├── LoginFrame.java
-│       ├── AdminDashboard.java
-│       ├── ManageUsersPanel.java
-│       ├── SalesReportPanel.java
-│       ├── ReservationsReportPanel.java
-│       ├── RevenueReportPanel.java
-│       ├── CustomerRepDashboard.java
-│       ├── ManageFlightsPanel.java
-│       ├── ManageAircraftsPanel.java
-│       ├── ManageAirportsPanel.java
-│       ├── CustomerRepReservationPanel.java
-│       ├── EditReservationPanel.java
-│       ├── WaitlistPanel.java
-│       ├── FlightsByAirportPanel.java
-│       └── QuestionsPanel.java
-└── README.md
-```
-
----
-
-## 11. Known Limitations
-
-- Passwords are stored as plain text in the database (acceptable for a class project demo).
-- Customer UI (flight search, booking, cancellation) is handled by **Person 2** — a placeholder is shown on customer login.
-- The JAR does not bundle the MySQL Connector/J due to licensing; it must always be on the classpath.
+- Passwords are stored as plain text (acceptable for a class project demo)
+- The MySQL Connector/J JAR must always be on the classpath — it is not bundled into the application

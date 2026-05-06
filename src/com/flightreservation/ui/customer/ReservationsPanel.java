@@ -117,7 +117,6 @@ public class ReservationsPanel extends JPanel {
                     cancelMsg += "\nA $50 cancellation fee has been applied.";
                 }
 
-                // Notify first waitlisted customer if a seat opened up
                 Object[] waitlisted = service.getFirstWaitlisted(flightId, depDate);
                 if (waitlisted != null) {
                     String custName  = (String) waitlisted[1];
@@ -138,8 +137,6 @@ public class ReservationsPanel extends JPanel {
             }
         }
     }
-
-    // ── Past ──────────────────────────────────────────────────────────────────
 
     private JPanel buildPastTab() {
         JPanel p = new JPanel(new BorderLayout(5, 5));
@@ -176,24 +173,19 @@ public class ReservationsPanel extends JPanel {
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private Object[] buildRow(Object[] r) {
-        // r: ticketNum, flightNum, airlineId, airlineName, depAirportId, arrAirportId,
-        //    depCity, arrCity, depDate, class, seatNum, mealPref,
-        //    totalFare, status, ticketType, flightId
         return new Object[]{
-            r[0],  // ticket#
-            r[1],  // flight#
-            r[3],  // airlineName
-            r[4] + " (" + r[6] + ")",  // from
-            r[5] + " (" + r[7] + ")",  // to
-            r[8],  // date
-            r[9],  // class
-            r[10] != null ? r[10] : "—",  // seat
-            r[11] != null ? r[11] : "standard",  // meal
-            String.format("$%.2f", r[12]),  // fare
-            r[13]  // status
+            r[0],
+            r[1],
+            r[3],
+            r[4] + " (" + r[6] + ")",
+            r[5] + " (" + r[7] + ")",
+            r[8],
+            r[9],
+            r[10] != null ? r[10] : "—",
+            r[11] != null ? r[11] : "standard",
+            String.format("$%.2f", r[12]),
+            r[13]
         };
     }
 
@@ -204,14 +196,13 @@ public class ReservationsPanel extends JPanel {
         for (int i = 0; i < widths.length && i < t.getColumnCount(); i++)
             t.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
-        // Colour cancelled rows
         t.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable tbl, Object val,
                     boolean sel, boolean focus, int row, int col) {
                 Component comp = super.getTableCellRendererComponent(tbl, val, sel, focus, row, col);
                 if (!sel) {
-                    Object statusVal = tbl.getModel().getValueAt(row, 10); // Status column
+                    Object statusVal = tbl.getModel().getValueAt(row, 10);
                     if ("cancelled".equals(statusVal)) {
                         comp.setForeground(Color.GRAY);
                         comp.setBackground(new Color(245, 245, 245));

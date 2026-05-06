@@ -16,7 +16,6 @@ public class EditReservationPanel extends JPanel {
     private final JTable             table;
     private       List<Object[]>     currentData;
 
-    // Edit fields
     private JTextField    dateField;
     private JComboBox<String> classBox;
     private JTextField    seatField;
@@ -32,7 +31,6 @@ public class EditReservationPanel extends JPanel {
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Search bar
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.add(new JLabel("Search by name / email / ticket#:"));
         JTextField searchField = new JTextField(20);
@@ -103,7 +101,6 @@ public class EditReservationPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0 || currentData == null) { saveBtn.setEnabled(false); return; }
         Object[] r = currentData.get(row);
-        // r: [ticket_num, cname, email, flight_num, aname, depDate, class, seatNum, mealPref, flightId]
         dateField.setText(r[5] != null ? r[5].toString() : "");
         String cls = (String) r[6];
         for (int i = 0; i < classBox.getItemCount(); i++)
@@ -135,7 +132,6 @@ public class EditReservationPanel extends JPanel {
                 seatField.getText().trim(),
                 (String) mealBox.getSelectedItem());
             JOptionPane.showMessageDialog(this, "Reservation updated successfully.");
-            // Refresh the row in the table
             currentData.get(row)[5] = depDate;
             currentData.get(row)[6] = classBox.getSelectedItem();
             currentData.get(row)[7] = seatField.getText().trim();

@@ -78,7 +78,6 @@ public class QuestionsPanel extends JPanel {
         split.setResizeWeight(0.4);
         add(split, BorderLayout.CENTER);
 
-        // Wire up
         refreshBtn.addActionListener(e -> loadData());
 
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -95,8 +94,6 @@ public class QuestionsPanel extends JPanel {
         try {
             currentData = service.getAllQuestions();
             for (Object[] row : currentData) {
-                // row: questionId, customerName, subject, questionText, answerText,
-                //      askedDatetime, answeredDatetime
                 String status = (row[6] != null) ? "Answered" : "Unanswered";
                 tableModel.addRow(new Object[]{
                     row[0], row[1], row[2], row[5], status
@@ -116,10 +113,8 @@ public class QuestionsPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0 || currentData == null) { saveBtn.setEnabled(false); return; }
         Object[] r = currentData.get(row);
-        // Build question display
         questionArea.setText(
             "From: " + r[1] + "\nSubject: " + r[2] + "\n\n" + r[3]);
-        // Pre-fill existing answer if any
         answerArea.setText(r[4] != null ? (String) r[4] : "");
         boolean alreadyAnswered = (r[6] != null);
         saveBtn.setEnabled(true);

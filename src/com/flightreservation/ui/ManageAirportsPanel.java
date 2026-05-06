@@ -94,7 +94,7 @@ public class ManageAirportsPanel extends JPanel {
         JTextField cityField    = new JTextField(isEdit ? existing.getCity() : "", 15);
         JTextField countryField = new JTextField(isEdit ? existing.getCountry() : "", 15);
 
-        if (isEdit) codeField.setEditable(false); // PK cannot change
+        if (isEdit) codeField.setEditable(false);
 
         JPanel form = new JPanel(new GridLayout(0, 2, 6, 6));
         form.add(new JLabel("Airport Code (3 letters):")); form.add(codeField);

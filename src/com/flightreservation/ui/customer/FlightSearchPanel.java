@@ -189,8 +189,6 @@ public class FlightSearchPanel extends JPanel {
         return p;
     }
 
-    // ── Search logic ──────────────────────────────────────────────────────────
-
     private void doSearch() {
         String dep = depField.getText().trim().toUpperCase();
         String arr = arrField.getText().trim().toUpperCase();
@@ -214,11 +212,10 @@ public class FlightSearchPanel extends JPanel {
         }
         rawResults = new ArrayList<>(originalResults);
 
-        // Rebuild airline filter dropdown
         allAirlines.clear();
         allAirlines.add("All");
         for (Object[] r : originalResults) {
-            String airline = (String) r[3]; // airlineName
+            String airline = (String) r[3];
             if (!allAirlines.contains(airline)) allAirlines.add(airline);
         }
         airlineFilterBox.removeAllItems();
@@ -271,7 +268,6 @@ public class FlightSearchPanel extends JPanel {
             filtered.add(r);
         }
 
-        // Sort
         String sortChoice = (String) sortBox.getSelectedItem();
         if (sortChoice != null) {
             if (sortChoice.startsWith("Departure")) {
@@ -289,7 +285,6 @@ public class FlightSearchPanel extends JPanel {
             }
         }
 
-        // Rebuild table; keep rawResults in sync with displayed rows for row-picking
         tableModel.setRowCount(0);
         rawResults = filtered;
 
@@ -298,16 +293,16 @@ public class FlightSearchPanel extends JPanel {
             int booked    = (Integer) r[16];
             int available = capacity - booked;
             tableModel.addRow(new Object[]{
-                r[0],   // flightId
-                r[1],   // flightNum
-                r[3],   // airlineName
-                r[4],   // depAirportId
-                r[5],   // arrAirportId
-                r[8],   // depTime
-                r[9],   // arrTime
-                r[10],  // type
-                r[11],  // daysOfWeek
-                r[17],  // stops
+                r[0],
+                r[1],
+                r[3],
+                r[4],
+                r[5],
+                r[8],
+                r[9],
+                r[10],
+                r[11],
+                r[17],
                 String.format("$%.0f", r[12]),
                 String.format("$%.0f", r[13]),
                 String.format("$%.0f", r[14]),
@@ -316,8 +311,6 @@ public class FlightSearchPanel extends JPanel {
         }
         countLabel.setText("  " + filtered.size() + " flight(s) found");
     }
-
-    // ── Booking ───────────────────────────────────────────────────────────────
 
     private void openBookingDialog() {
         int row = table.getSelectedRow();
@@ -330,7 +323,6 @@ public class FlightSearchPanel extends JPanel {
         String tripType = (String) tripTypeBox.getSelectedItem();
         boolean isRoundTrip = "Round-Trip".equals(tripType);
 
-        // For flexible searches, ask user to confirm which exact date they want
         Date depDate;
         if (flexibleCheck.isSelected()) {
             String dateStr = JOptionPane.showInputDialog(this,
@@ -379,7 +371,7 @@ public class FlightSearchPanel extends JPanel {
         java.time.LocalTime dep = ((java.sql.Time) r[8]).toLocalTime();
         java.time.LocalTime arr = ((java.sql.Time) r[9]).toLocalTime();
         long secs = dep.until(arr, java.time.temporal.ChronoUnit.SECONDS);
-        if (secs < 0) secs += 86400; // overnight flight
+        if (secs < 0) secs += 86400;
         return secs / 60;
     }
 

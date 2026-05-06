@@ -83,7 +83,6 @@ public class BookingDialog extends JDialog {
         JPanel center = new JPanel();
         center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
 
-        // Outbound booking form
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(BorderFactory.createTitledBorder(isRoundTrip ? "Outbound Details" : "Booking Details"));
         GridBagConstraints g = new GridBagConstraints();
@@ -115,7 +114,6 @@ public class BookingDialog extends JDialog {
 
         center.add(form);
 
-        // Return flight section (round-trip only)
         if (isRoundTrip) {
             JPanel retPanel = new JPanel(new BorderLayout(5, 5));
             retPanel.setBorder(BorderFactory.createTitledBorder(

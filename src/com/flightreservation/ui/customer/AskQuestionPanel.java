@@ -80,13 +80,11 @@ public class AskQuestionPanel extends JPanel {
         historyPanel.add(btnRow, BorderLayout.NORTH);
         historyPanel.add(split,  BorderLayout.CENTER);
 
-        // ── Layout ────────────────────────────────────────────────────────
         JSplitPane mainSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
             submitPanel, historyPanel);
         mainSplit.setResizeWeight(0.35);
         add(mainSplit, BorderLayout.CENTER);
 
-        // ── Wire up ───────────────────────────────────────────────────────
         submitBtn.addActionListener(e -> {
             String subject  = subjectField.getText().trim();
             String question = questionArea.getText().trim();
@@ -144,15 +142,13 @@ public class AskQuestionPanel extends JPanel {
         try {
             loadedQuestions = service.getMyQuestions(customer.getCustomerId());
             for (Object[] r : loadedQuestions) {
-                // r: questionId, subject, questionText, answerText,
-                //    askedDatetime, answeredDatetime
                 String status = (r[3] != null) ? "Answered" : "Awaiting reply";
                 tableModel.addRow(new Object[]{
-                    r[0],   // ID
-                    r[1],   // Subject
-                    r[4],   // askedDatetime
+                    r[0],
+                    r[1],
+                    r[4],
                     status,
-                    r[5] != null ? r[5].toString() : "—"  // answeredDatetime
+                    r[5] != null ? r[5].toString() : "—"
                 });
             }
         } catch (SQLException ex) {

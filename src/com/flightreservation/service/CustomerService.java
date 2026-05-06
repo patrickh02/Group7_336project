@@ -38,7 +38,7 @@ public class CustomerService {
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             int idx = 1;
-            ps.setDate(idx++, date);          // for booked subquery
+            ps.setDate(idx++, date);
             ps.setString(idx++, depAirport);
             ps.setString(idx++, arrAirport);
             if (!flexible) {
@@ -47,24 +47,24 @@ public class CustomerService {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(new Object[]{
-                        rs.getInt("flight_id"),       // [0]
-                        rs.getString("flight_num"),    // [1]
-                        rs.getString("airline_id"),    // [2]
-                        rs.getString("airline_name"),  // [3]
-                        rs.getString("dep_airport_id"),// [4]
-                        rs.getString("arr_airport_id"),// [5]
-                        rs.getString("dep_city"),      // [6]
-                        rs.getString("arr_city"),      // [7]
-                        rs.getTime("dep_time"),        // [8]
-                        rs.getTime("arr_time"),        // [9]
-                        rs.getString("type"),          // [10]
-                        rs.getString("days_of_week"),  // [11]
-                        rs.getDouble("economy_price"), // [12]
-                        rs.getDouble("business_price"),// [13]
-                        rs.getDouble("first_price"),   // [14]
-                        rs.getInt("capacity"),         // [15]
-                        rs.getInt("booked"),           // [16]
-                        rs.getInt("stops")             // [17]
+                        rs.getInt("flight_id"),
+                        rs.getString("flight_num"),
+                        rs.getString("airline_id"),
+                        rs.getString("airline_name"),
+                        rs.getString("dep_airport_id"),
+                        rs.getString("arr_airport_id"),
+                        rs.getString("dep_city"),
+                        rs.getString("arr_city"),
+                        rs.getTime("dep_time"),
+                        rs.getTime("arr_time"),
+                        rs.getString("type"),
+                        rs.getString("days_of_week"),
+                        rs.getDouble("economy_price"),
+                        rs.getDouble("business_price"),
+                        rs.getDouble("first_price"),
+                        rs.getInt("capacity"),
+                        rs.getInt("booked"),
+                        rs.getInt("stops")
                     });
                 }
             }

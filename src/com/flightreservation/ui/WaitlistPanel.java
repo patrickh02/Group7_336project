@@ -24,7 +24,6 @@ public class WaitlistPanel extends JPanel {
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Top: flight selector
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topPanel.add(new JLabel("Select Flight:"));
         JComboBox<String> flightBox = new JComboBox<>();
@@ -35,7 +34,6 @@ public class WaitlistPanel extends JPanel {
         topPanel.add(searchBtn);
         add(topPanel, BorderLayout.NORTH);
 
-        // Table
         tableModel = new DefaultTableModel(COLS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -46,7 +44,6 @@ public class WaitlistPanel extends JPanel {
         countLabel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
         add(countLabel, BorderLayout.SOUTH);
 
-        // Load flights
         Runnable loadFlights = () -> {
             try {
                 flights = service.getAllFlights();

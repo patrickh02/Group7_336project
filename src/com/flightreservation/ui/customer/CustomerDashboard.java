@@ -7,10 +7,6 @@ import com.flightreservation.ui.LoginFrame;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Main window displayed after a customer logs in.
- * Hosts tabs for flight search, reservations, and support.
- */
 public class CustomerDashboard extends JFrame {
 
     public CustomerDashboard(Customer customer) {
@@ -21,7 +17,6 @@ public class CustomerDashboard extends JFrame {
 
         CustomerService service = new CustomerService();
 
-        // ── Tab pane ──────────────────────────────────────────────────────
         JTabbedPane tabs = new JTabbedPane();
 
         FlightSearchPanel searchPanel = new FlightSearchPanel(service, customer);
@@ -30,7 +25,6 @@ public class CustomerDashboard extends JFrame {
         tabs.addTab("Ask a Question",     new AskQuestionPanel(service, customer));
         tabs.addTab("Browse Q&A",         new BrowseQAPanel(service));
 
-        // ── Status bar ────────────────────────────────────────────────────
         JLabel statusBar = new JLabel(
             "  Logged in as: " + customer.getName() + " (" + customer.getEmail() + ")");
         statusBar.setFont(statusBar.getFont().deriveFont(12f));
@@ -46,7 +40,6 @@ public class CustomerDashboard extends JFrame {
         bottom.add(statusBar, BorderLayout.WEST);
         bottom.add(logoutBtn, BorderLayout.EAST);
 
-        // ── Welcome banner ────────────────────────────────────────────────
         JLabel welcome = new JLabel(
             "  Welcome back, " + customer.getName() + "!   Search flights, view reservations, ask a question, or browse Q&A.",
             SwingConstants.LEFT);

@@ -26,7 +26,6 @@ public class FlightsByAirportPanel extends JPanel {
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Top: airport selector
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topPanel.add(new JLabel("Select Airport:"));
         JComboBox<String> airportBox = new JComboBox<>();
@@ -37,7 +36,6 @@ public class FlightsByAirportPanel extends JPanel {
         topPanel.add(searchBtn);
         add(topPanel, BorderLayout.NORTH);
 
-        // Two tables in a split pane
         depModel = new DefaultTableModel(COLS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -57,7 +55,6 @@ public class FlightsByAirportPanel extends JPanel {
         split.setResizeWeight(0.5);
         add(split, BorderLayout.CENTER);
 
-        // Wire up
         loadAirportsBtn.addActionListener(e -> loadAirports(airportBox));
         searchBtn.addActionListener(e -> showFlights(airportBox));
 

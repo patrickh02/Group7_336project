@@ -21,7 +21,6 @@ public class BrowseQAPanel extends JPanel {
         setLayout(new BorderLayout(8, 8));
         setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
 
-        // Search bar
         JPanel searchBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         searchBar.setBorder(BorderFactory.createTitledBorder("Browse Answered Questions & Answers"));
         JTextField keywordField = new JTextField(22);
@@ -33,7 +32,6 @@ public class BrowseQAPanel extends JPanel {
         searchBar.add(showAllBtn);
         add(searchBar, BorderLayout.NORTH);
 
-        // Table
         tableModel = new DefaultTableModel(COLS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -44,7 +42,6 @@ public class BrowseQAPanel extends JPanel {
         table.getColumnModel().getColumn(1).setPreferredWidth(280);
         table.getColumnModel().getColumn(2).setPreferredWidth(150);
 
-        // Detail area
         JTextArea detailArea = new JTextArea(9, 50);
         detailArea.setEditable(false);
         detailArea.setLineWrap(true);
@@ -60,7 +57,6 @@ public class BrowseQAPanel extends JPanel {
         split.setResizeWeight(0.45);
         add(split, BorderLayout.CENTER);
 
-        // Wire up
         searchBtn.addActionListener(e -> loadQA(keywordField.getText().trim()));
         showAllBtn.addActionListener(e -> { keywordField.setText(""); loadQA(""); });
         keywordField.addActionListener(e -> loadQA(keywordField.getText().trim()));

@@ -41,14 +41,12 @@ public class EditReservationPanel extends JPanel {
         searchPanel.add(searchBtn);
         add(searchPanel, BorderLayout.NORTH);
 
-        // Results table
         tableModel = new DefaultTableModel(COLS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Edit form
         JPanel editForm = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         editForm.setBorder(BorderFactory.createTitledBorder("Edit Selected Reservation"));
         editForm.add(new JLabel("Dep Date (YYYY-MM-DD):"));
@@ -72,7 +70,6 @@ public class EditReservationPanel extends JPanel {
         split.setResizeWeight(0.65);
         add(split, BorderLayout.CENTER);
 
-        // Wire up
         searchBtn.addActionListener(e -> doSearch(searchField.getText().trim()));
         searchField.addActionListener(e -> doSearch(searchField.getText().trim()));
 

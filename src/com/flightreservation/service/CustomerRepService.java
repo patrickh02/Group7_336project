@@ -7,13 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * All database operations needed by the Customer Representative UI.
- * Every method opens, uses, and closes its own Connection via try-with-resources.
- */
 public class CustomerRepService {
-
-    // ── Login ────────────────────────────────────────────────────────────────
 
     public Employee loginEmployee(String email, String password) throws SQLException {
         String sql = "SELECT employee_id, name, email, type FROM Employee WHERE email=? AND password=?";
@@ -56,7 +50,6 @@ public class CustomerRepService {
         return null;
     }
 
-    // ── Airlines (for dropdowns) ─────────────────────────────────────────────
 
     public List<Airline> getAllAirlines() throws SQLException {
         List<Airline> list = new ArrayList<>();
@@ -71,7 +64,6 @@ public class CustomerRepService {
         return list;
     }
 
-    // ── Aircraft CRUD ────────────────────────────────────────────────────────
 
     public List<Aircraft> getAllAircrafts() throws SQLException {
         List<Aircraft> list = new ArrayList<>();
@@ -123,7 +115,6 @@ public class CustomerRepService {
         }
     }
 
-    // ── Airport CRUD ─────────────────────────────────────────────────────────
 
     public List<Airport> getAllAirports() throws SQLException {
         List<Airport> list = new ArrayList<>();
@@ -176,7 +167,6 @@ public class CustomerRepService {
         }
     }
 
-    // ── Flight CRUD ──────────────────────────────────────────────────────────
 
     public List<Flight> getAllFlights() throws SQLException {
         List<Flight> list = new ArrayList<>();
@@ -277,7 +267,6 @@ public class CustomerRepService {
         }
     }
 
-    // ── Customers ────────────────────────────────────────────────────────────
 
     public List<Customer> getAllCustomers() throws SQLException {
         List<Customer> list = new ArrayList<>();
@@ -322,7 +311,6 @@ public class CustomerRepService {
         return list;
     }
 
-    // ── Reservations ─────────────────────────────────────────────────────────
 
     public int getBookedSeats(int flightId, java.sql.Date depDate) throws SQLException {
         String sql =
@@ -358,10 +346,6 @@ public class CustomerRepService {
         return getBookedSeats(flightId, depDate) >= getFlightCapacity(flightId);
     }
 
-    /**
-     * Books a one-way ticket for a customer (rep-assisted).
-     * Returns the new ticket_num on success.
-     */
     public int createReservation(int customerId, int flightId, java.sql.Date depDate,
                                   String flightClass, String seatNum, String mealPref)
             throws SQLException {
@@ -443,12 +427,7 @@ public class CustomerRepService {
         }
     }
 
-    // ── Edit Reservation ─────────────────────────────────────────────────────
 
-    /**
-     * Returns rows: ticket_num, customerName, email, flightNum, airlineName,
-     *               depDate, class, seatNum, mealPref, flightId
-     */
     public List<Object[]> searchReservations(String term) throws SQLException {
         List<Object[]> list = new ArrayList<>();
         String sql =
@@ -532,11 +511,7 @@ public class CustomerRepService {
         }
     }
 
-    // ── Waitlist ─────────────────────────────────────────────────────────────
 
-    /**
-     * Returns rows: position, customerId, name, email, phone, depDate, class, requestTime
-     */
     public List<Object[]> getWaitlistForFlight(int flightId) throws SQLException {
         List<Object[]> list = new ArrayList<>();
         String sql =
@@ -567,11 +542,7 @@ public class CustomerRepService {
         return list;
     }
 
-    // ── Flights by Airport ───────────────────────────────────────────────────
 
-    /**
-     * Returns rows: flightId, flightNum, airlineName, otherCity, time, type, days, economyPrice
-     */
     public List<Object[]> getDepartingFlights(String airportId) throws SQLException {
         return flightsByAirport(airportId, true);
     }
@@ -615,13 +586,7 @@ public class CustomerRepService {
         return list;
     }
 
-    // ── Questions ────────────────────────────────────────────────────────────
 
-    /**
-     * Returns rows: questionId, customerName, subject, questionText,
-     *               answerText, askedDatetime, answeredDatetime
-     * Unanswered questions first.
-     */
     public List<Object[]> getAllQuestions() throws SQLException {
         List<Object[]> list = new ArrayList<>();
         String sql =

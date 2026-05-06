@@ -66,7 +66,6 @@ public class LoginFrame extends JFrame {
                 }
                 Customer cu = service.loginCustomer(email, pass);
                 if (cu != null) {
-                    // Customer placeholder — Person 2 will add customer UI here
                     dispose();
                     new com.flightreservation.ui.customer.CustomerDashboard(cu).setVisible(true);
                     return;

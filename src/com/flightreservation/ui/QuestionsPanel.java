@@ -32,7 +32,6 @@ public class QuestionsPanel extends JPanel {
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Table of questions
         tableModel = new DefaultTableModel(COLS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -47,7 +46,6 @@ public class QuestionsPanel extends JPanel {
         JScrollPane tableScroll = new JScrollPane(table);
         tableScroll.setPreferredSize(new Dimension(0, 200));
 
-        // Detail / answer area
         JPanel detailPanel = new JPanel(new BorderLayout(5, 5));
         detailPanel.setBorder(BorderFactory.createTitledBorder("Question Detail & Answer"));
 

@@ -6,21 +6,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * All database operations needed by the Customer UI.
- */
 public class CustomerService {
 
-    // ── Flight Search ────────────────────────────────────────────────────────
-
-    /**
-     * Search for direct flights matching departure airport, arrival airport, and date.
-     * If flexible=true, also matches flights within ±3 days of the given date.
-     *
-     * Returns rows: flightId, flightNum, airlineId, airlineName, depAirportId,
-     *               arrAirportId, depTime, arrTime, type, economyPrice, businessPrice,
-     *               firstPrice, capacity, bookedSeats
-     */
     public List<Object[]> searchFlights(String depAirport, String arrAirport,
                                         java.sql.Date date, boolean flexible)
             throws SQLException {
@@ -28,8 +15,6 @@ public class CustomerService {
 
         String dayOfWeek = getDayAbbrev(date);
 
-        // For flexible searches, all flights on the route are returned (user confirms
-        // the exact date at booking time). For specific dates, filter by days_of_week.
         String sql =
             "SELECT f.flight_id, f.flight_num, f.airline_id, al.name AS airline_name, " +
             "f.dep_airport_id, f.arr_airport_id, " +
@@ -94,11 +79,6 @@ public class CustomerService {
         return days[cal.get(java.util.Calendar.DAY_OF_WEEK) - 1];
     }
 
-    // ── Booking ──────────────────────────────────────────────────────────────
-
-    /**
-     * Returns number of booked seats for a flight on a specific date.
-     */
     public int getBookedSeats(int flightId, java.sql.Date depDate) throws SQLException {
         String sql =
             "SELECT COUNT(*) FROM TicketFlight tf " +
@@ -115,9 +95,6 @@ public class CustomerService {
         return 0;
     }
 
-    /**
-     * Returns capacity of the aircraft assigned to the given flight.
-     */
     public int getFlightCapacity(int flightId) throws SQLException {
         String sql =
             "SELECT ac.capacity FROM Flight f " +
@@ -132,15 +109,11 @@ public class CustomerService {
         return 0;
     }
 
-    /**
-     * Books a one-way ticket for the customer.
-     * Returns the new ticket_num on success.
-     */
     public int bookTicket(int customerId, int flightId, java.sql.Date depDate,
                           String flightClass, String seatNum, String mealPref,
                           boolean flexible, double fare)
             throws SQLException {
-        final double total = fare + 25.00; // fare + booking fee
+        final double total = fare + 25.00;
 
         try (Connection c = DBConnection.getConnection()) {
             c.setAutoCommit(false);
@@ -180,9 +153,6 @@ public class CustomerService {
         }
     }
 
-    /**
-     * Adds a customer to the waitlist for a given flight/date.
-     */
     public void addToWaitlist(int customerId, int flightId, java.sql.Date depDate,
                               String flightClass) throws SQLException {
         String posSql =
@@ -210,20 +180,10 @@ public class CustomerService {
         }
     }
 
-    // ── Reservations ─────────────────────────────────────────────────────────
-
-    /**
-     * Returns upcoming reservations (dep_date >= today) for the customer.
-     * Rows: ticketNum, flightNum, airlineId, airlineName, depAirportId, arrAirportId,
-     *       depDate, class, seatNum, mealPref, totalFare, status, ticketType, flightId, purchaseDatetime
-     */
     public List<Object[]> getUpcomingReservations(int customerId) throws SQLException {
         return getReservations(customerId, true);
     }
 
-    /**
-     * Returns past reservations (dep_date < today) for the customer.
-     */
     public List<Object[]> getPastReservations(int customerId) throws SQLException {
         return getReservations(customerId, false);
     }
@@ -286,8 +246,6 @@ public class CustomerService {
         }
     }
 
-    // ── Round-Trip Booking ───────────────────────────────────────────────────
-
     public int bookRoundTrip(int customerId,
                              int outFlightId, java.sql.Date outDate,
                              int retFlightId, java.sql.Date retDate,
@@ -342,8 +300,6 @@ public class CustomerService {
             }
         }
     }
-
-    // ── Waitlist Notification Helpers ────────────────────────────────────────
 
     public Object[] getTicketFlightInfo(int ticketNum) throws SQLException {
         String sql =
@@ -413,8 +369,6 @@ public class CustomerService {
         }
     }
 
-    // ── Ask a Question ───────────────────────────────────────────────────────
-
     public void submitQuestion(int customerId, String subject, String questionText)
             throws SQLException {
         String sql =
@@ -454,7 +408,6 @@ public class CustomerService {
         return list;
     }
 
-    // rows: questionId, subject, questionText, answerText, askedDatetime, answeredDatetime
     public List<Object[]> getAnsweredQuestions(String keyword) throws SQLException {
         List<Object[]> list = new ArrayList<>();
         String kw = "%" + (keyword == null ? "" : keyword.trim()) + "%";

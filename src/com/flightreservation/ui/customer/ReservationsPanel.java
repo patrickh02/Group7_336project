@@ -9,21 +9,15 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Displays a customer's upcoming and past reservations in separate tabs.
- * Business/First class tickets can be cancelled from the Upcoming tab.
- */
 public class ReservationsPanel extends JPanel {
 
     private final CustomerService service;
     private final Customer        customer;
 
-    // Upcoming tab
     private DefaultTableModel upcomingModel;
     private JTable            upcomingTable;
     private List<Object[]>    upcomingData;
 
-    // Past tab
     private DefaultTableModel pastModel;
     private JTable            pastTable;
 
@@ -46,8 +40,6 @@ public class ReservationsPanel extends JPanel {
         loadUpcoming();
         loadPast();
     }
-
-    // ── Upcoming ──────────────────────────────────────────────────────────────
 
     private JPanel buildUpcomingTab() {
         JPanel p = new JPanel(new BorderLayout(5, 5));

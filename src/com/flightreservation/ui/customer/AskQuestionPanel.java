@@ -9,10 +9,6 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Lets a customer submit questions to customer representatives
- * and view answers to their previous questions.
- */
 public class AskQuestionPanel extends JPanel {
 
     private final CustomerService service;
@@ -29,7 +25,6 @@ public class AskQuestionPanel extends JPanel {
         setLayout(new BorderLayout(8, 8));
         setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
 
-        // ── Top: submit new question ──────────────────────────────────────
         JPanel submitPanel = new JPanel(new BorderLayout(6, 6));
         submitPanel.setBorder(BorderFactory.createTitledBorder("Ask a New Question"));
 
@@ -50,7 +45,6 @@ public class AskQuestionPanel extends JPanel {
         submitBtnRow.add(submitBtn);
         submitPanel.add(submitBtnRow, BorderLayout.SOUTH);
 
-        // ── Bottom: my questions history ──────────────────────────────────
         JPanel historyPanel = new JPanel(new BorderLayout(5, 5));
         historyPanel.setBorder(BorderFactory.createTitledBorder("My Questions & Answers"));
 

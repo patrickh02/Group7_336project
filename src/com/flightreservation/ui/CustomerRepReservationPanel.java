@@ -41,14 +41,12 @@ public class CustomerRepReservationPanel extends JPanel {
 
         int row = 0;
 
-        // Title
         JLabel title = new JLabel("Make Reservation for Customer");
         title.setFont(title.getFont().deriveFont(Font.BOLD, 14f));
         g.gridx = 0; g.gridy = row++; g.gridwidth = 3;
         form.add(title, g);
         g.gridwidth = 1;
 
-        // Customer
         g.gridy = row; g.gridx = 0; form.add(new JLabel("Customer:"), g);
         customerBox = new JComboBox<>();
         g.gridx = 1; g.gridwidth = 2; form.add(customerBox, g);
@@ -57,7 +55,6 @@ public class CustomerRepReservationPanel extends JPanel {
         g.gridx = 3; form.add(refreshCust, g);
         row++;
 
-        // Flight
         g.gridy = row; g.gridx = 0; form.add(new JLabel("Flight:"), g);
         flightBox = new JComboBox<>();
         g.gridx = 1; g.gridwidth = 2; form.add(flightBox, g);
@@ -66,37 +63,31 @@ public class CustomerRepReservationPanel extends JPanel {
         g.gridx = 3; form.add(refreshFlight, g);
         row++;
 
-        // Capacity info
         capacityLabel = new JLabel(" ");
         g.gridy = row++; g.gridx = 1; g.gridwidth = 2;
         form.add(capacityLabel, g);
         g.gridwidth = 1;
 
-        // Departure Date
         g.gridy = row; g.gridx = 0; form.add(new JLabel("Departure Date (YYYY-MM-DD):"), g);
         dateField = new JTextField("2026-06-15", 12);
         g.gridx = 1; form.add(dateField, g);
         row++;
 
-        // Class
         g.gridy = row; g.gridx = 0; form.add(new JLabel("Class:"), g);
         classBox = new JComboBox<>(new String[]{"economy", "business", "first"});
         g.gridx = 1; form.add(classBox, g);
         row++;
 
-        // Seat
         g.gridy = row; g.gridx = 0; form.add(new JLabel("Seat Number (optional):"), g);
         seatField = new JTextField("", 6);
         g.gridx = 1; form.add(seatField, g);
         row++;
 
-        // Meal
         g.gridy = row; g.gridx = 0; form.add(new JLabel("Meal Preference:"), g);
         mealBox = new JComboBox<>(new String[]{"standard", "vegetarian", "vegan", "halal", "kosher"});
         g.gridx = 1; form.add(mealBox, g);
         row++;
 
-        // Book button
         JButton bookBtn = new JButton("Book Reservation");
         bookBtn.setFont(bookBtn.getFont().deriveFont(Font.BOLD));
         g.gridy = row; g.gridx = 0; g.gridwidth = 4; g.fill = GridBagConstraints.NONE;
@@ -104,7 +95,6 @@ public class CustomerRepReservationPanel extends JPanel {
 
         add(form, BorderLayout.NORTH);
 
-        // Wire up
         refreshCust.addActionListener(e -> loadCustomers());
         refreshFlight.addActionListener(e -> loadFlights());
         flightBox.addActionListener(e -> updateCapacityLabel());

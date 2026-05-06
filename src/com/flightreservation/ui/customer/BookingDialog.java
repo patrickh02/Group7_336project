@@ -25,7 +25,6 @@ public class BookingDialog extends JDialog {
     private JLabel            priceLabel;
     private JLabel            capacityLabel;
 
-    // Round-trip return flight selection
     private List<Object[]>    returnFlights;
     private JTable            returnTable;
     private DefaultTableModel returnModel;

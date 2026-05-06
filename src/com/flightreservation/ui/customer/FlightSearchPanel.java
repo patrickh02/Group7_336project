@@ -11,16 +11,11 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 
-/**
- * Lets a customer search for flights by route and date,
- * then sort/filter results and proceed to booking.
- */
 public class FlightSearchPanel extends JPanel {
 
     private final CustomerService service;
     private final Customer        customer;
 
-    // Search inputs
     private JTextField    depField;
     private JTextField    arrField;
     private JTextField    dateField;
@@ -29,7 +24,6 @@ public class FlightSearchPanel extends JPanel {
     private JComboBox<String> tripTypeBox;
     private JCheckBox     flexibleCheck;
 
-    // Sort / filter
     private JComboBox<String> sortBox;
     private JComboBox<String> airlineFilterBox;
     private JTextField        maxPriceField;
@@ -37,14 +31,13 @@ public class FlightSearchPanel extends JPanel {
     private JTextField        depAfterField;
     private JTextField        arrBeforeField;
 
-    // Results
     private DefaultTableModel tableModel;
     private JTable            table;
     private JLabel            countLabel;
 
-    private List<Object[]> rawResults     = new ArrayList<>();  // current displayed rows
-    private List<Object[]> originalResults = new ArrayList<>(); // full unfiltered search results
-    private List<String>   allAirlines = new ArrayList<>();  // for filter dropdown
+    private List<Object[]> rawResults     = new ArrayList<>();
+    private List<Object[]> originalResults = new ArrayList<>();
+    private List<String>   allAirlines = new ArrayList<>();
 
     private static final String[] COLS = {
         "Flight ID", "Flight#", "Airline", "From", "To",
@@ -62,12 +55,9 @@ public class FlightSearchPanel extends JPanel {
         add(buildBookButton(),  BorderLayout.SOUTH);
     }
 
-    // ── Search form ───────────────────────────────────────────────────────────
-
     private JPanel buildSearchForm() {
         JPanel outer = new JPanel(new BorderLayout(0, 6));
 
-        // Row 1: route + date
         JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         row1.add(new JLabel("From Airport (e.g. JFK):"));
         depField = new JTextField("JFK", 6);
@@ -99,7 +89,6 @@ public class FlightSearchPanel extends JPanel {
         searchBtn.setFont(searchBtn.getFont().deriveFont(Font.BOLD));
         row1.add(searchBtn);
 
-        // Row 2: sort + filter
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         row2.add(new JLabel("Sort by:"));
         sortBox = new JComboBox<>(new String[]{
@@ -137,7 +126,6 @@ public class FlightSearchPanel extends JPanel {
         outer.add(row1, BorderLayout.NORTH);
         outer.add(row2, BorderLayout.SOUTH);
 
-        // Wire up
         searchBtn.addActionListener(e -> doSearch());
         dateField.addActionListener(e -> doSearch());
         applyBtn.addActionListener(e -> applyFiltersAndSort());
@@ -153,8 +141,6 @@ public class FlightSearchPanel extends JPanel {
         return outer;
     }
 
-    // ── Results table ─────────────────────────────────────────────────────────
-
     private JScrollPane buildResultsArea() {
         tableModel = new DefaultTableModel(COLS, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -166,7 +152,6 @@ public class FlightSearchPanel extends JPanel {
         for (int i = 0; i < widths.length && i < table.getColumnCount(); i++)
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
 
-        // Colour rows where flight is full
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object val,
